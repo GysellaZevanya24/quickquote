@@ -1237,7 +1237,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         list.innerHTML = items.map((item, index) => {
             const grossAmount = item.qty * item.unitPrice;
             const discountAmount = grossAmount * ((item.discount || 0) / 100);
-            const netAmount = grossAmount - discountAmount;
+            const netAmount = Math.round(grossAmount - discountAmount);
             return `
                 <div class="item-card">
                     <div class="item-header">
@@ -1267,11 +1267,11 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         const subtotal = items.reduce((sum, item) => {
             const grossAmount = item.qty * item.unitPrice;
             const discountAmount = grossAmount * ((item.discount || 0) / 100);
-            return sum + (grossAmount - discountAmount);
+            return sum + Math.round(grossAmount - discountAmount);
         }, 0);
         const includeTax = document.getElementById('include-tax').checked;
         const taxRate = parseFloat(settings.taxRate) || 11;
-        const tax = includeTax ? subtotal * (taxRate / 100) : 0;
+        const tax = includeTax ? Math.round(subtotal * (taxRate / 100)) : 0;
         const grandTotal = subtotal + tax;
 
         document.getElementById('subtotal').textContent = formatRupiah(subtotal);
@@ -1481,7 +1481,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
             const discount = item.discount || 0;
             const grossAmount = item.qty * item.unitPrice;
             const discountAmount = grossAmount * discount / 100;
-            const netAmount = grossAmount - discountAmount;
+            const netAmount = Math.round(grossAmount - discountAmount);
             return [
                 i + 1,
                 item.partNumber,
@@ -1810,7 +1810,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
                         const discount = item.discount || 0;
                         const grossAmount = item.qty * item.unitPrice;
                         const discountAmount = grossAmount * discount / 100;
-                        const netAmount = grossAmount - discountAmount;
+                        const netAmount = Math.round(grossAmount - discountAmount);
                         return {
                             no: i + 1,
                             partNumber: item.partNumber,
