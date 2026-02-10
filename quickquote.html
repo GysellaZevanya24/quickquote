@@ -1463,10 +1463,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         doc.text(`: `, 40, y);
 
         // Quote info (right side)
-        y = 65;
-        doc.text(`No.`, 120, y);
-        doc.text(`: ${quoteData.quoteNumber}`, 137, y);
-        y += 5;       
+        y = 65;      
         doc.text(`Date`, 120, y);
         doc.text(`: ${formatDate(quoteData.quoteDate)}`, 137, y);
         y += 5;
