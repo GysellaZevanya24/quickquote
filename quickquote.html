@@ -478,7 +478,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>No. Quotation</label>
-                        <input type="text" id="quoteNumber" placeholder="QUO-2026-0001">
+                        <input type="text" id="quoteNumber" placeholder="QUOTE-SALES-001_10022026">
                     </div>
                     <div class="form-group">
                         <label>Tanggal</label>
@@ -497,7 +497,8 @@
                 </div>
                 <div class="form-group">
                     <label>Customer</label>
-                    <input type="text" id="customerName" placeholder="PT. NAMA CUSTOMER">
+                    <input type="text" id="customerName" list="customerList" placeholder="Ketik atau pilih customer">
+                    <datalist id="customerList"></datalist>
                 </div>
                 <div class="form-group">
                     <label>Address</label>
@@ -521,8 +522,8 @@
                 
                 <div class="format-hint">
                     💡 <strong>Format paste dari Google Sheets:</strong><br>
-                    <code>Part Number | Description | Qty | Unit | Unit Price | Remark</code><br>
-                    Contoh: <code>380905130 | LEFT SIDE BLADE | 1 | PCS | 2950000 | Indent 1-2 Month</code>
+                    <code>Part Number | Description | Qty | Unit | Unit Price | Discount(%) | Remark</code><br>
+                    Contoh: <code>380905130 | LEFT SIDE BLADE | 1 | PCS | 2950000 | 10 | Indent 1-2 Month</code>
                 </div>
 
                 <div class="paste-area" id="paste-area" onclick="document.getElementById('paste-input').focus()">
@@ -530,9 +531,9 @@
                     <p>Copy dari spreadsheet, lalu paste di bawah ini</p>
                     <textarea id="paste-input" placeholder="Paste data di sini...
 Contoh:
-380905130	LEFT SIDE BLADE	1	PCS	2950000	Indent 1-2 Month
-380905143	RIGHT SIDE BLADE	1	PCS	2950000	Indent 1-2 Month
-805048195	HINGED COVER BOLT	40	PCS	17000	Indent 1-2 Month"></textarea>
+380905130	LEFT SIDE BLADE	1	PCS	2950000	10	Indent 1-2 Month
+380905143	RIGHT SIDE BLADE	1	PCS	2950000	0	Indent 1-2 Month
+805048195	HINGED COVER BOLT	40	PCS	17000	5	Indent 1-2 Month"></textarea>
                 </div>
                 <button class="btn btn-primary btn-full" onclick="parseAndAddItems()">
                     ✨ Parse & Tambah Items
@@ -602,7 +603,8 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
                 <div class="card-title">🚀 Generate Quotation</div>
                 <div class="form-group">
                     <label>Quote by (Sales)</label>
-                    <input type="text" id="sales-name" placeholder="Nama Sales">
+                    <input type="text" id="sales-name" list="salesList" placeholder="Ketik atau pilih sales">
+                    <datalist id="salesList"></datalist>
                 </div>
                 <button class="btn btn-primary btn-full" onclick="previewQuotation()" style="margin-bottom: 10px;">
                     👁️ Preview Quotation
@@ -638,6 +640,15 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
             <div class="card">
                 <div class="settings-section">
                     <div class="settings-title">🏢 Informasi Perusahaan</div>
+                    <div class="form-group">
+                        <label>Logo Perusahaan</label>
+                        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                            <img id="logoPreview" src="" alt="Logo" style="max-width: 150px; max-height: 60px; display: none; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px;">
+                            <input type="file" id="logoUpload" accept="image/*" onchange="handleLogoUpload(event)" style="display: none;">
+                            <button type="button" class="btn btn-outline" onclick="document.getElementById('logoUpload').click()">📷 Upload Logo</button>
+                            <button type="button" class="btn btn-danger" onclick="removeLogo()" style="display: none;" id="removeLogoBtn">🗑️</button>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label>Nama Perusahaan</label>
                         <input type="text" id="companyName" value="PT. MAXIMUS INDO ASIA">
@@ -785,6 +796,10 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
                     <input type="text" id="item-price" placeholder="2,950,000" oninput="formatPriceInput(this)">
                 </div>
                 <div class="form-group">
+                    <label>Discount (%)</label>
+                    <input type="number" id="item-discount" placeholder="0" min="0" max="100" value="0">
+                </div>
+                <div class="form-group">
                     <label>Remark</label>
                     <input type="text" id="item-remark" placeholder="Indent 1-2 Month">
                 </div>
@@ -824,13 +839,110 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
     let settings = {};
     let history = [];
 
+    // ============ CUSTOMER & SALES LISTS ============
+    const customerList = [
+        'AINON', 'ANDI SAPUTRA', 'ANELKA RAYNARA', 'APRIYADI', 'ARDIANSYAH', 'ARJUANDA',
+        'PT. BANGUN PATRIA PROPERTINDO', 'BANGUN PROPORINDO', 'BINTANG BETON INDONESIA',
+        'CV. ABADI MAKMUR SEJATI', 'CV. AIMAS BARUNA NUSANTARA', 'CV. ANUGERAH ABADI',
+        'CV. BATU BERLIAN PRATAMA', 'CV. BINTANG TUNJUK SEJAHTERA', 'CV. DIESEL SUKSES MANDIRI',
+        'CV. INNOMAS SEMPURNA', 'CV. KAILA BERSAUDARA', 'CV. KARYA MITRA',
+        'CV. LAMBASINDO ANUGRAH TEKNIK', 'CV. LOKAHITA', 'CV. MARKO', 'CV. MIKHA JAYA',
+        'CV. PADMAS', 'CV. PUTRA SUMBER ABADI', 'CV. PUTRI UTAMA MANDIRI', 'CV. REMAJA JAYA ABADI',
+        'CV. RIAU JAYA LESTARI', 'CV. SAHALA', 'CV. SAHALA SUKSES MANDIRI', 'CV. SURYA GALA',
+        'CV. USAHA MAKMUR MANDIRI', 'CV. WIJAYA EKSPRESS', 'CV. YOSHIKO HAWA GEMILANG',
+        'CV. ZAMRUD PERMATA RIAU', 'DANDI', 'DARMAWAN', 'DEBI SAPUTRA', 'DEDE / NURKAMAN',
+        'DEDE KAMSIDI', 'DIAN BUDIANA', 'DIRGANTARA', 'DIYAN PERMANA PUTRA',
+        'DOMINIKUS DEDI DORES', 'EKI SETIAWAN', 'EMILDA LIGUNA', 'ERWANTO', 'FATIN',
+        'FEBRI ASJUNDA', 'FERI HALOMOAN', 'FRANKIE', 'GURUH PUTRA BERSAMA',
+        'GUNUNG HASIAN HARAHAP', 'HIDJRAH MAULUDI AL ALA', 'HUA LONG CONTRUCTION MACHINERY INDONESIA',
+        'I GEDE SUDARMA', 'IRWAN', 'ISTIQOMATUL ROHMI', 'KARLI KALOTAK', 'KIKI KURNIAWAN',
+        'LUBIS', 'MALI', 'MATNUR', 'MAYA PURNAMASARI,SE', 'MITRA WEITEK MAKMUR', 'MUK SALIN',
+        'NANDO SAPUTRO', 'ORIELI GEA', 'ARIFIN', 'HAJI UNOL', 'PANCA JAYA STEVEDORING',
+        'PT. ABADI GUNUNG READYMIX', 'PT. ADHIE USAHA DIESEL', 'PT. ADHIE USAHA MANDIRI',
+        'PT. ALPALI MANDIRI PERKASA', 'PT. ANCARA LOGISTICS INDONESIA TBK',
+        'PT. ANDALAN MAKMUR PARTINDO', 'PT. ANEKA JAYA KAUTSAR', 'PT. ANUGERAH ABADI BERSATU',
+        'PT. ANUGERAH DELTA SARANA', 'PT. ANUGERAH TRAKTOR PERKASA', 'PT. AROUW MULTI USAHA',
+        'PT. AROW MULTI USAHA', 'PT. ARRAYAN TEKNIK PARTINDO', 'PT. ASRI KEMASINDO',
+        'PT. BARA SUKSES NUSANTARA', 'PT. BERAU KARETINDO LESTARI', 'PT. BERCA MANDIRI PERKASA',
+        'PT. BHUMI BAKTI', 'PT. BHUMI BHAKTI SUKSES PERSADA', 'PT. BUANA TRISTAR SEJAHTERA',
+        'PT. BUKA BUMI KONSTRUKSI', 'PT. BUKAKA TEKNIK', 'PT. BUMI KHATULISTIWA MANDIRI',
+        'PT. BUMI LINTAS RAYA', 'PT. CATUR PUTRA MANUNGGAL', 'PT. CEMINDO GEMILANG, TBK',
+        'PT. DARMA HENWA TBK', 'PT. DIAN PURNAWIRA SWASTA', 'PT. DIRGANTARA BETONINDO',
+        'PT. DIRGANTARA YUDHA ARTHA', 'PT. DUO SOLUSI SENTOSA', 'PT. DUTA PRIMA POWERS',
+        'PT. FARIKA BETON', 'PT. GAJAH UNGGUL INTERNASIONAL', 'PT. GANDA ELANG TANGGUH',
+        'PT. GERIN SURYA GEMILANG', 'PT. GLOBAL YIMI CARGO', 'PT. HAMPARAN PASIR',
+        'PT. HEVEA MK', 'PT. INDO TRUCKTOR JAYA MAKMUR', 'PT. INDODERCO SEMESTA RAYA',
+        'PT. JAKUB PUTRA EMAS', 'PT. JARUM MAHAKARYA INDONESIA', 'PT. JASA PRIMA INTERNUSA',
+        'PT. JATI KENCANA', 'PT. JAYA MANGGALA INDONESIA', 'PT. KAMPAR ALAM MAS INTI',
+        'PT. KARYA ARDI PRESTASI', 'PT. KARYA BELLA VITA', 'PT. KARYA BUANA SEJAHTERA',
+        'PT. KARYA BUMI PACHINGKA', 'PT. KARYA CIPTA NIRVANA', 'PT. KARYA INTI PRATAMA',
+        'PT. KARYA MAJUJAYA PERKASA', 'PT. KASOMALANG CIPTA PERKASA', 'PT. KURNIA ARTHA PRATIWI',
+        'PT. LAKSANA BERKAH PRATAMA', 'PT. MAHAKAM COAL TERMINAL', 'PT. MAKASSAR INDAH GRAHA SARANA',
+        'PT. MANDIRI ARTHA PRIMATAMA', 'PT. MARGA MAJU MAPAN', 'PT. MARKINAH',
+        'PT. MAS AUTOMOBIL SEJAHTERA', 'PT. MAXI TRAKTOR INDONESIA', 'PT. MITRA ADISUKSES PERKASA',
+        'PT. MITRA SELARAS CIPTA SEJAHTERA', 'PT. MITSUYA BUKIT RIMBA', 'PT. MULIA RENTALINDO PERSADA',
+        'PT. MULTI USAHA TAMBANG', 'PT. MUSTIKA POWERINDO', 'PT. MUSTIKA WIJAYA LESTARI',
+        'PT. NIKMAT HALONA REKSA', 'PT. NUSA KONSTRUKSI ENJINIRING, TBK',
+        'PT. PANCARAN DARAT TRANSPORT', 'PT. PANCARAN ENERGI TRANSPORTASI', 'PT. PANDU MULIA ABADI',
+        'PT. PEMBANGUNAN ABADI ANDALAS AGUNG', 'PT. PERKASA INDOQUIP UTAMA', 'PT. PISON MULIA PERKASA',
+        'PT. PRIMA DITO NUSANTARA', 'PT. PRIMA MAJU JAYA', 'PT. PUTRA BUANA ABADI JAYA PERKASA',
+        'PT. PYRAMIDA RAYA PERSADA', 'PT. RANTAI MULIA KENCANA', 'PT. RENTAMA',
+        'PT. RIAU JAYA LESTARI', 'PT. ROYALTAMA MULIA KONTRAKTORINDO, TBK', 'PT. ROADMIXINDO RAYA',
+        'PT. RODA JAYA SAKTI', 'PT. SAI NIAGA INTERNASIONAL', 'PT. SARI DAYA PLASINDO',
+        'PT. SELO AGUNG', 'PT. SELO BUMI QUARRY', 'PT. SEMEN JAWA', 'PT. SHENGLI BETON',
+        'PT. SIGIT PUTRA AGUNG', 'PT. SIMAS SAWIT ALIANTAN', 'PT. SINAR INTI SAWIT',
+        'PT. STANLEY MITRA ABADI', 'PT. SUMBER INTI GLOBAL SUKSES', 'PT. SUNGAI PAKNING MAHULU',
+        'PT. TEKNOTAMA LINGKUNGAN INTERNUSA', 'PT. TIGA PUTRI BERSAUDARA', 'PT. TIMUR PERKASA MINERALINDO',
+        'PT. TRI TUNGGAL PERDANA', 'PT. TRIDAYA INDO MINERAL', 'PT. TRISULA TEXTILE INDUSTRIES TBK',
+        'PT. TUNAS DAMAI', 'PT. UMG INDONESIA', 'PT. UNIVERSAL SUPPORT', 'PT. VERDANCO ENGINEERING',
+        'PT. WAHANA FIRDAUS CEMERLANG', 'PT. WANAPOTENSI GUNA', 'PT. WELL HARVEST WINNING ALUMINA REFINERY',
+        'PT. WIJAYA KARYA', 'PT. WIJAYA KARYA BETON, TBK', 'PT. WIJAYA KARYA INDUSTRI & KONSTRUKSI',
+        'PT. WILLYS', 'PT. WILLYS CAHAYA KARUNIA', 'PT. WIRA AGUNG', 'PT. YOSIKAWA',
+        'PT. YOSIKAWA GEMILANG', 'PUTRA RACHMAD KARWANTO', 'RAHMAD WIRADI', 'RAHMAD WIRADI SURYA',
+        'PT. SANLING SAWIT SEJAHTERA', 'SEPTHIAN EKA NUR IFTITAHUL HAMDILLAH',
+        'SKS LISTRIK KALIMANTAN', 'SLAMET RIYADI', 'SOFYAN SUMARKOCO', 'SUGENG RIYADI',
+        'SUMINO', 'SUPARDI', 'SUPARMAN', 'SUPRIADY', 'SYAUKANI', 'INGGIL', 'PT. PLN NUSANTARA',
+        'HENDRI', 'PT. BANGUN SINAR SEJATI', 'PT. GUNUNG BATU SEJAHTERA', 'PT. DELVIAN JAYA ABADI',
+        'RANGGA', 'SATRIA', 'PT. SATRIA MAYANGKARA SERVICE', 'PT. RENCANA MULIA BARATAMA',
+        'PT. JOGLO MATOS NUSANTARA', 'BURHAN', 'AHMAD', 'NATHAN', 'PT. RIAU SEPADAN',
+        'PT. MESKOM AGRO SARIMAS', 'DEDI', 'BUDI SENTOSA', 'SURYANSYAH', 'PT. RESTU ALAM INDONESIA',
+        'ERIK', 'BADRIE', 'DADI SETIAWAN', 'PT. FITRA MELAYU RIAU', 'HOMBAR', 'INDRA',
+        'PT. PADANG KARUNIA GRUP', 'CV. ARGA PERMATA MANDIRI', 'PT. RMK ENERGY TBK', 'ABIDIN',
+        'ADAY', 'IBNU', 'CV. ASEP TEHKNIK', 'WEWEN', 'PT. DAKE ENERGI INDONESIA', 'ROBI',
+        'HAMDAN', 'MARBUN', 'PT. RICON MASINTAN PRATAMA', 'RIGEL KEND', 'BUDI', 'YURI',
+        'PT. GITA PERKASA MINERALINDO', 'HENGKY AGRIFA', 'UDIN', 'ASOL', 'IMAM', 'SYAHMINAN',
+        'FERNANDO', 'PT. BESAR OLEH SITU', 'PT. MATARAM BARA MULIA', 'TAUFIK', 'MANSUR',
+        'PT. KANTAR NAMBELA', 'KADIR', 'WARMAN', 'CARLICARLOTA', 'DARMODI', 'WAYAN HARDIKO', 'ARDIS'
+    ];
+
+    const salesList = ['Fahmi', 'Yudha', 'Daris', 'Yaser', 'Irfan', 'Rehan'];
+
     // ============ INIT ============
     document.addEventListener('DOMContentLoaded', function() {
         loadSettings();
         loadHistory();
         initQuotation();
         setupPasteListener();
+        initDataLists();
     });
+
+    function initDataLists() {
+        // Populate customer datalist
+        const customerDatalist = document.getElementById('customerList');
+        customerList.forEach(customer => {
+            const option = document.createElement('option');
+            option.value = customer;
+            customerDatalist.appendChild(option);
+        });
+
+        // Populate sales datalist
+        const salesDatalist = document.getElementById('salesList');
+        salesList.forEach(sales => {
+            const option = document.createElement('option');
+            option.value = sales;
+            salesDatalist.appendChild(option);
+        });
+    }
 
     function loadSettings() {
         const saved = localStorage.getItem('maximus_settings');
@@ -845,6 +957,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
             taxRate: 11,
             sheetsWebAppUrl: '',
             sheetsId: '',
+            companyLogo: '',
             noteIndentSea: 'Indent By Sea\nTOP 30 Days\nFranco Jakarta\n\nAll payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia',
             noteIndentAir: 'Indent By Air\nTOP 14 Days\nFranco Jakarta\n\nAll payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia',
             noteReadyStock: 'Ready Stock\nTOP 7 Days\nFranco Jakarta\n\nAll payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia'
@@ -864,6 +977,13 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         document.getElementById('noteIndentSea').value = settings.noteIndentSea;
         document.getElementById('noteIndentAir').value = settings.noteIndentAir;
         document.getElementById('noteReadyStock').value = settings.noteReadyStock;
+
+        // Load logo
+        if (settings.companyLogo) {
+            document.getElementById('logoPreview').src = settings.companyLogo;
+            document.getElementById('logoPreview').style.display = 'block';
+            document.getElementById('removeLogoBtn').style.display = 'inline-flex';
+        }
     }
 
     function loadHistory() {
@@ -872,17 +992,55 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         renderHistory();
     }
 
-    function initQuotation() {
-        // Generate quote number
-        const prefix = settings.quotePrefix || 'QUO';
+    function generateQuoteNumber(salesName, commitSequence = false) {
         const date = new Date();
-        const year = date.getFullYear();
+        const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
-        const num = String(history.length + 1).padStart(4, '0');
-        document.getElementById('quoteNumber').value = `${prefix}-${year}${month}-${num}`;
+        const year = date.getFullYear();
+        const dateStr = `${day}${month}${year}`;
+        
+        // Get sales name (uppercase, remove spaces)
+        const sales = (salesName || 'SALES').toUpperCase().replace(/\s+/g, '');
+        
+        // Get sequence for this sales person from localStorage
+        let sequences = JSON.parse(localStorage.getItem('maximus_sequences') || '{}');
+        const seqKey = `${sales}_${year}${month}`;
+        
+        // Only increment if commitSequence is true (when actually saving)
+        if (commitSequence) {
+            sequences[seqKey] = (sequences[seqKey] || 0) + 1;
+            localStorage.setItem('maximus_sequences', JSON.stringify(sequences));
+        }
+        
+        const seq = String((sequences[seqKey] || 0) + (commitSequence ? 0 : 1)).padStart(3, '0');
+        return `QUOTE-${sales}-${seq}_${dateStr}`;
+    }
 
-        // Set date
+    function getNextQuoteNumber(salesName) {
+        // Preview only - don't increment
+        return generateQuoteNumber(salesName, false);
+    }
+
+    function commitQuoteNumber(salesName) {
+        // Actually save - increment sequence
+        return generateQuoteNumber(salesName, true);
+    }
+
+    function updateQuoteNumber() {
+        const salesName = document.getElementById('sales-name').value;
+        if (salesName) {
+            document.getElementById('quoteNumber').value = getNextQuoteNumber(salesName);
+        }
+    }
+
+    function initQuotation() {
+        // Set date first
+        const date = new Date();
         document.getElementById('quoteDate').value = date.toISOString().split('T')[0];
+        
+        // Generate quote number (preview - don't increment)
+        const salesName = document.getElementById('sales-name').value || 'SALES';
+        document.getElementById('quoteNumber').value = getNextQuoteNumber(salesName);
         
         // Set validity
         document.getElementById('validity').value = settings.defaultValidity || '30 Days';
@@ -891,6 +1049,9 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         if (settings.sheetsWebAppUrl) {
             document.getElementById('sync-status').style.display = 'flex';
         }
+
+        // Add listener for sales name change
+        document.getElementById('sales-name').addEventListener('change', updateQuoteNumber);
     }
 
     function setupPasteListener() {
@@ -956,7 +1117,8 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
                     qty: parseInt(cols[2]) || 1,
                     unit: cols[3] || 'PCS',
                     unitPrice: parseCurrency(cols[4] || '0'),
-                    remark: cols[5] || ''
+                    discount: parseFloat(cols[5]) || 0,
+                    remark: cols[6] || ''
                 };
 
                 // Only add if has part number or description
@@ -973,7 +1135,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
             document.getElementById('paste-input').value = '';
             showToast(`✅ ${addedCount} item berhasil ditambahkan`);
         } else {
-            showToast('⚠️ Format tidak valid. Gunakan format: Part Number | Description | Qty | Unit | Price | Remark');
+            showToast('⚠️ Format tidak valid. Gunakan format: Part Number | Description | Qty | Unit | Price | Discount(%) | Remark');
         }
     }
 
@@ -986,6 +1148,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         document.getElementById('item-qty').value = '1';
         document.getElementById('item-unit').value = 'PCS';
         document.getElementById('item-price').value = '';
+        document.getElementById('item-discount').value = '0';
         document.getElementById('item-remark').value = '';
         document.getElementById('item-modal').classList.add('show');
     }
@@ -999,6 +1162,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         document.getElementById('item-qty').value = item.qty;
         document.getElementById('item-unit').value = item.unit;
         document.getElementById('item-price').value = formatNumber(item.unitPrice);
+        document.getElementById('item-discount').value = item.discount || 0;
         document.getElementById('item-remark').value = item.remark || '';
         document.getElementById('item-modal').classList.add('show');
     }
@@ -1013,6 +1177,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         const qty = parseInt(document.getElementById('item-qty').value) || 1;
         const unit = document.getElementById('item-unit').value;
         const unitPrice = parseCurrency(document.getElementById('item-price').value);
+        const discount = parseFloat(document.getElementById('item-discount').value) || 0;
         const remark = document.getElementById('item-remark').value.trim();
 
         if (!partNumber && !description) {
@@ -1020,7 +1185,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
             return;
         }
 
-        const item = { partNumber, description, qty, unit, unitPrice, remark };
+        const item = { partNumber, description, qty, unit, unitPrice, discount, remark };
 
         if (editingIndex >= 0) {
             items[editingIndex] = item;
@@ -1070,7 +1235,9 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         count.textContent = items.length;
 
         list.innerHTML = items.map((item, index) => {
-            const amount = item.qty * item.unitPrice;
+            const grossAmount = item.qty * item.unitPrice;
+            const discountAmount = grossAmount * ((item.discount || 0) / 100);
+            const netAmount = grossAmount - discountAmount;
             return `
                 <div class="item-card">
                     <div class="item-header">
@@ -1078,11 +1245,12 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
                             <div class="item-partno">${item.partNumber}</div>
                             <div class="item-desc">${item.description}</div>
                         </div>
-                        <div class="item-amount">${formatRupiah(amount)}</div>
+                        <div class="item-amount">${formatRupiah(netAmount)}</div>
                     </div>
                     <div class="item-details">
                         <span>${item.qty} ${item.unit}</span>
                         <span>@ ${formatRupiah(item.unitPrice)}</span>
+                        ${item.discount > 0 ? `<span style="color:#dc2626;">Disc ${item.discount}%</span>` : ''}
                     </div>
                     ${item.remark ? `<div class="item-remark">📌 ${item.remark}</div>` : ''}
                     <div class="item-actions">
@@ -1096,7 +1264,11 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
 
     // ============ CALCULATIONS ============
     function calculateTotal() {
-        const subtotal = items.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0);
+        const subtotal = items.reduce((sum, item) => {
+            const grossAmount = item.qty * item.unitPrice;
+            const discountAmount = grossAmount * ((item.discount || 0) / 100);
+            return sum + (grossAmount - discountAmount);
+        }, 0);
         const includeTax = document.getElementById('include-tax').checked;
         const taxRate = parseFloat(settings.taxRate) || 11;
         const tax = includeTax ? subtotal * (taxRate / 100) : 0;
@@ -1234,29 +1406,41 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         const gray = [107, 114, 128];
         const black = [0, 0, 0];
         const lightGray = [156, 163, 175];
+        const darkGray = [55, 65, 81];
 
-        // Header - Logo text
-        doc.setFontSize(24);
+        let headerY = 15;
+
+        // Logo (if available)
+        let logoEndX = 14;
+        if (settings.companyLogo) {
+            try {
+                doc.addImage(settings.companyLogo, 'JPEG', 14, headerY, 30, 15);
+                logoEndX = 50;
+            } catch (e) {
+                console.log('Logo error:', e);
+            }
+        }
+
+        // Company info (company name as header, no "MAXIMUS" text)
+        doc.setFontSize(14);
         doc.setTextColor(...black);
         doc.setFont('helvetica', 'bold');
-        doc.text('MAXIMUS', 14, 20);
+        doc.text(settings.companyName, logoEndX, 20);
 
-        // Company info
+        // Company address
         doc.setFontSize(9);
-        doc.setTextColor(...black);
         doc.setFont('helvetica', 'normal');
         const addressLines = settings.companyAddress.split('\n');
         let y = 25;
-        doc.text(settings.companyName, 14, y);
         addressLines.forEach(line => {
+            doc.text(line, logoEndX, y);
             y += 4;
-            doc.text(line, 14, y);
         });
 
         // Quotation title bar
         doc.setFillColor(...lightGray);
         doc.rect(14, 45, 182, 10, 'F');
-        doc.setTextColor(255, 255, 255);
+        doc.setTextColor(...black);
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
         doc.text('Quotation', 105, 52, { align: 'center' });
@@ -1295,61 +1479,84 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         doc.text(`Attn`, 120, y);
         doc.text(`: ${quoteData.attn}`, 145, y);
 
-        // Table
-        const tableData = items.map((item, i) => [
-            i + 1,
-            item.partNumber,
-            item.description,
-            item.qty,
-            item.unit,
-            'Rp ' + formatNumber(item.unitPrice),
-            'Rp ' + formatNumber(item.qty * item.unitPrice),
-            item.remark
-        ]);
+        // Table with discount column
+        const tableData = items.map((item, i) => {
+            const discount = item.discount || 0;
+            const grossAmount = item.qty * item.unitPrice;
+            const discountAmount = grossAmount * discount / 100;
+            const netAmount = grossAmount - discountAmount;
+            return [
+                i + 1,
+                item.partNumber,
+                item.description,
+                item.qty,
+                item.unit,
+                'Rp ' + formatNumber(item.unitPrice),
+                discount > 0 ? discount + '%' : '-',
+                'Rp ' + formatNumber(netAmount),
+                item.remark
+            ];
+        });
 
         doc.autoTable({
             startY: 95,
-            head: [['No', 'Part Number', 'Description', 'Qty', 'Unit', 'Unit Price (IDR)', 'Amount (IDR)', 'Remark']],
+            head: [['No', 'Part No', 'Description', 'Qty', 'Unit', 'Unit Price', 'Disc', 'Amount', 'Remark']],
             body: tableData,
             theme: 'grid',
             headStyles: {
-                fillColor: gray,
-                textColor: [255, 255, 255],
+                fillColor: [255, 255, 255],
+                textColor: black,
                 fontStyle: 'bold',
-                fontSize: 8
+                fontSize: 8,
+                lineWidth: 0.2,
+                lineColor: [0, 0, 0]
             },
             bodyStyles: {
-                fontSize: 8
+                fontSize: 8,
+                textColor: [0, 0, 0],
+                lineWidth: 0.2,
+                lineColor: black
+            },
+            styles: {
+                lineWidth: 0.2,
+                lineColor: black
             },
             columnStyles: {
-                0: { cellWidth: 10, halign: 'center' },
-                1: { cellWidth: 25 },
-                2: { cellWidth: 40 },
-                3: { cellWidth: 12, halign: 'center' },
-                4: { cellWidth: 12, halign: 'center' },
-                5: { cellWidth: 25, halign: 'right' },
-                6: { cellWidth: 25, halign: 'right' },
-                7: { cellWidth: 30, textColor: gray, fontSize: 7 }
+                0: { cellWidth: 8, halign: 'center', textColor: [0, 0, 0] },
+                1: { cellWidth: 22, textColor: [0, 0, 0] },
+                2: { cellWidth: 38, textColor: [0, 0, 0] },
+                3: { cellWidth: 10, halign: 'center', textColor: [0, 0, 0] },
+                4: { cellWidth: 10, halign: 'center', textColor: [0, 0, 0] },
+                5: { cellWidth: 22, halign: 'right', textColor: [0, 0, 0] },
+                6: { cellWidth: 12, halign: 'center', textColor: [0, 0, 0] },
+                7: { cellWidth: 25, halign: 'right', textColor: [0, 0, 0] },
+                8: { cellWidth: 28, textColor: [0, 0, 0], fontSize: 7 }
             }
         });
 
-        // Totals
+        // Totals - aligned with table (Amount column starts at ~122)
         let finalY = doc.lastAutoTable.finalY + 10;
+        // Table: No(8)+PartNo(22)+Desc(38)+Qty(10)+Unit(10)+UnitPrice(22)+Disc(12) = 122 start of Amount
+        const labelX = 122;      // Left-aligned labels start at Amount column
+        const rpX = 155;         // "Rp" position
+        const valueX = 175;      // Right-aligned values (end of Amount column area)
+
         doc.setFontSize(10);
-        doc.text('Total', 140, finalY);
-        doc.text('Rp', 165, finalY);
-        doc.text(formatNumber(totals.subtotal), 195, finalY, { align: 'right' });
+        doc.setFont('helvetica', 'normal');
+        doc.text('Total', labelX, finalY);
+        doc.text('Rp', rpX, finalY);
+        doc.text(formatNumber(totals.subtotal), valueX, finalY, { align: 'right' });
         
         finalY += 6;
-        doc.text('Tax', 140, finalY);
-        doc.text('Rp', 165, finalY);
-        doc.text(formatNumber(totals.tax), 195, finalY, { align: 'right' });
+        doc.text('Tax (11%)', labelX, finalY);
+        doc.text('Rp', rpX, finalY);
+        doc.text(formatNumber(totals.tax), valueX, finalY, { align: 'right' });
         
         finalY += 6;
         doc.setFont('helvetica', 'bold');
-        doc.text('Grand Total', 140, finalY);
-        doc.text('Rp', 165, finalY);
-        doc.text(formatNumber(totals.grandTotal), 195, finalY, { align: 'right' });
+        doc.text('Grand Total', labelX, finalY);
+        doc.text('Rp', rpX, finalY);
+        doc.text(formatNumber(totals.grandTotal), valueX, finalY, { align: 'right' });
 
         // Note
         finalY += 15;
@@ -1376,6 +1583,9 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         doc.setTextColor(...black);
         doc.setFont('helvetica', 'bold');
         doc.text(quoteData.salesName, 14, finalY);
+
+        // Commit the sequence number since we're actually saving
+        commitQuoteNumber(quoteData.salesName);
 
         // Save
         doc.save(`${quoteData.quoteNumber}.pdf`);
@@ -1475,14 +1685,9 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         const item = history.find(h => h.id === id);
         if (!item) return;
 
-        // Generate new quote number
-        const prefix = settings.quotePrefix || 'QUO';
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const num = String(history.length + 1).padStart(4, '0');
-
-        document.getElementById('quoteNumber').value = `${prefix}-${year}${month}-${num}`;
+        // Generate new quote number using sales name
+        const salesName = item.salesName || 'SALES';
+        document.getElementById('quoteNumber').value = generateQuoteNumber(salesName);
         document.getElementById('quoteDate').value = date.toISOString().split('T')[0];
         document.getElementById('validity').value = item.validity;
         document.getElementById('attn').value = item.attn;
@@ -1574,16 +1779,23 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
                     customerEmail: quoteData.customerEmail,
                     attn: quoteData.attn,
                     validity: quoteData.validity,
-                    items: items.map((item, i) => ({
-                        no: i + 1,
-                        partNumber: item.partNumber,
-                        description: item.description,
-                        qty: item.qty,
-                        unit: item.unit,
-                        unitPrice: item.unitPrice,
-                        amount: item.qty * item.unitPrice,
-                        remark: item.remark
-                    })),
+                    items: items.map((item, i) => {
+                        const discount = item.discount || 0;
+                        const grossAmount = item.qty * item.unitPrice;
+                        const discountAmount = grossAmount * discount / 100;
+                        const netAmount = grossAmount - discountAmount;
+                        return {
+                            no: i + 1,
+                            partNumber: item.partNumber,
+                            description: item.description,
+                            qty: item.qty,
+                            unit: item.unit,
+                            unitPrice: item.unitPrice,
+                            discount: discount,
+                            amount: netAmount,
+                            remark: item.remark
+                        };
+                    }),
                     subtotal: totals.subtotal,
                     tax: totals.tax,
                     grandTotal: totals.grandTotal,
@@ -1612,6 +1824,9 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
             }
 
             if (result.success) {
+                // Commit the sequence number since we're actually saving
+                commitQuoteNumber(quoteData.salesName);
+                
                 syncStatus.className = 'sync-status';
                 syncText.textContent = 'Tersimpan ke Google Sheets ✓';
                 showToast('✅ Data tersimpan ke Google Sheets');
@@ -1683,6 +1898,37 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
     }
 
     // ============ SETTINGS ============
+    function handleLogoUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (file.size > 500000) {
+            showToast('⚠️ Ukuran file terlalu besar (max 500KB)');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            settings.companyLogo = e.target.result;
+            document.getElementById('logoPreview').src = e.target.result;
+            document.getElementById('logoPreview').style.display = 'block';
+            document.getElementById('removeLogoBtn').style.display = 'inline-flex';
+            localStorage.setItem('maximus_settings', JSON.stringify(settings));
+            showToast('✅ Logo berhasil diupload');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeLogo() {
+        settings.companyLogo = '';
+        document.getElementById('logoPreview').src = '';
+        document.getElementById('logoPreview').style.display = 'none';
+        document.getElementById('removeLogoBtn').style.display = 'none';
+        document.getElementById('logoUpload').value = '';
+        localStorage.setItem('maximus_settings', JSON.stringify(settings));
+        showToast('🗑️ Logo dihapus');
+    }
+
     function saveSettings() {
         settings = {
             companyName: document.getElementById('companyName').value,
@@ -1695,6 +1941,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
             taxRate: parseFloat(document.getElementById('taxRate').value) || 11,
             sheetsWebAppUrl: document.getElementById('sheetsWebAppUrl').value,
             sheetsId: document.getElementById('sheetsId').value,
+            companyLogo: settings.companyLogo || '',
             noteIndentSea: document.getElementById('noteIndentSea').value,
             noteIndentAir: document.getElementById('noteIndentAir').value,
             noteReadyStock: document.getElementById('noteReadyStock').value
