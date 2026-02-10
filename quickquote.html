@@ -1408,73 +1408,73 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         const lightGray = [156, 163, 175];
         const darkGray = [55, 65, 81];
 
-        let headerY = 15;
+        let headerY = 12;
 
         // Logo (if available)
         let logoEndX = 14;
         if (settings.companyLogo) {
             try {
-                doc.addImage(settings.companyLogo, 'JPEG', 14, headerY, 30, 15);
-                logoEndX = 50;
+                doc.addImage(settings.companyLogo, 'JPEG', 14, headerY, 25, 12);
+                logoEndX = 42;
             } catch (e) {
                 console.log('Logo error:', e);
             }
         }
 
         // Company info (company name as header, no "MAXIMUS" text)
-        doc.setFontSize(14);
+        doc.setFontSize(12);
         doc.setTextColor(...black);
         doc.setFont('helvetica', 'bold');
-        doc.text(settings.companyName, logoEndX, 20);
+        doc.text(settings.companyName, logoEndX, 16);
 
         // Company address
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
         const addressLines = settings.companyAddress.split('\n');
-        let y = 25;
+        let y = 20;
         addressLines.forEach(line => {
             doc.text(line, logoEndX, y);
-            y += 4;
+            y += 3;
         });
 
         // Quotation title bar
         doc.setFillColor(...lightGray);
-        doc.rect(14, 45, 182, 10, 'F');
+        doc.rect(14, 35, 182, 8, 'F');
         doc.setTextColor(...black);
-        doc.setFontSize(14);
+        doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        doc.text('Quotation', 105, 52, { align: 'center' });
+        doc.text('Quotation', 105, 40.5, { align: 'center' });
 
         // Customer info (left side)
         doc.setTextColor(...black);
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
-        y = 65;
+        y = 50;
         doc.text(`Customer`, 14, y);
-        doc.text(`: ${quoteData.customerName}`, 40, y);
-        y += 5;
+        doc.text(`: ${quoteData.customerName}`, 35, y);
+        y += 4;
         doc.text(`Address`, 14, y);
-        doc.text(`: ${quoteData.customerAddress}`, 40, y);
-        y += 5;
+        doc.text(`: ${quoteData.customerAddress}`, 35, y);
+        y += 4;
         doc.text(`Telp`, 14, y);
-        doc.text(`: ${quoteData.customerPhone}`, 40, y);
-        y += 5;
+        doc.text(`: ${quoteData.customerPhone}`, 35, y);
+        y += 4;
         doc.text(`Fax`, 14, y);
-        doc.text(`: `, 40, y);
+        doc.text(`: `, 35, y);
 
         // Quote info (right side)
-        y = 65;      
+        y = 50;      
         doc.text(`Date`, 120, y);
-        doc.text(`: ${formatDate(quoteData.quoteDate)}`, 137, y);
-        y += 5;
+        doc.text(`: ${formatDate(quoteData.quoteDate)}`, 135, y);
+        y += 4;
         doc.text(`Validity`, 120, y);
-        doc.text(`: ${quoteData.validity}`, 137, y);
-        y += 5;
+        doc.text(`: ${quoteData.validity}`, 135, y);
+        y += 4;
         doc.text(`Email`, 120, y);
-        doc.text(`: ${quoteData.customerEmail}`, 137, y);
-        y += 5;
+        doc.text(`: ${quoteData.customerEmail}`, 135, y);
+        y += 4;
         doc.text(`Attn`, 120, y);
-        doc.text(`: ${quoteData.attn}`, 137, y);
+        doc.text(`: ${quoteData.attn}`, 135, y);
 
         // Table with discount column
         const tableData = items.map((item, i) => {
@@ -1496,7 +1496,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         });
 
         doc.autoTable({
-            startY: 95,
+            startY: 70,
             head: [['No', 'Part No', 'Description', 'Qty', 'Unit', 'Unit Price', 'Disc', 'Amount', 'Remark']],
             body: tableData,
             theme: 'grid',
@@ -1517,18 +1517,18 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
             styles: {
                 lineWidth: 0.2,
                 lineColor: black,
-                cellPadding: 2
+                cellPadding: 1.5
             },
             columnStyles: {
                 0: { cellWidth: 8, halign: 'center', textColor: [0, 0, 0] },
-                1: { cellWidth: 22, textColor: [0, 0, 0] },
-                2: { cellWidth: 38, textColor: [0, 0, 0] },
+                1: { cellWidth: 25, textColor: [0, 0, 0] },
+                2: { cellWidth: 45, textColor: [0, 0, 0] },
                 3: { cellWidth: 10, halign: 'center', textColor: [0, 0, 0] },
                 4: { cellWidth: 10, halign: 'center', textColor: [0, 0, 0] },
                 5: { cellWidth: 22, halign: 'right', textColor: [0, 0, 0] },
-                6: { cellWidth: 12, halign: 'center', textColor: [0, 0, 0] },
+                6: { cellWidth: 10, halign: 'center', textColor: [0, 0, 0] },
                 7: { cellWidth: 25, halign: 'right', textColor: [0, 0, 0] },
-                8: { cellWidth: 28, textColor: [0, 0, 0], fontSize: 7 }
+                8: { cellWidth: 20, textColor: [0, 0, 0], fontSize: 7 }
             },
             margin: { left: 14, right: 14 }
         });
@@ -1544,28 +1544,30 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
             finalY = 20;
         }
 
-        // Totals section - right aligned
-        const totalsStartX = pageWidth - 14 - 60; // 60mm width for totals section
-        const valueEndX = pageWidth - 14;
+        // Totals section - aligned with Amount column
+        // Table columns: No(8)+PartNo(25)+Desc(45)+Qty(10)+Unit(10)+UnitPrice(22)+Disc(10) = 130 from left margin
+        // Amount column: starts at 14+130=144, width 25, ends at 169
+        const amountColEnd = 14 + 8 + 25 + 45 + 10 + 10 + 22 + 10 + 25; // = 169
+        const labelStartX = amountColEnd - 50; // Labels start 50mm before end
 
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(...black);
         
         // Total row
-        doc.text('Total', totalsStartX, finalY);
-        doc.text('Rp ' + formatNumber(totals.subtotal), valueEndX, finalY, { align: 'right' });
+        doc.text('Total', labelStartX, finalY);
+        doc.text('Rp ' + formatNumber(totals.subtotal), amountColEnd, finalY, { align: 'right' });
         
         // Tax row
-        finalY += 6;
-        doc.text('Tax (11%)', totalsStartX, finalY);
-        doc.text('Rp ' + formatNumber(totals.tax), valueEndX, finalY, { align: 'right' });
+        finalY += 5;
+        doc.text('Tax (11%)', labelStartX, finalY);
+        doc.text('Rp ' + formatNumber(totals.tax), amountColEnd, finalY, { align: 'right' });
         
         // Grand Total row
-        finalY += 6;
+        finalY += 5;
         doc.setFont('helvetica', 'bold');
-        doc.text('Grand Total', totalsStartX, finalY);
-        doc.text('Rp ' + formatNumber(totals.grandTotal), valueEndX, finalY, { align: 'right' });
+        doc.text('Grand Total', labelStartX, finalY);
+        doc.text('Rp ' + formatNumber(totals.grandTotal), amountColEnd, finalY, { align: 'right' });
 
         // Check if we need a new page for notes section
         if (finalY > pageHeight - 60) {
