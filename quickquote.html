@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#374151">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>QuickQuote - PT. MAXIMUS INDO ASIA</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #374151 0%, #111827 100%);
+            color: white;
+            padding: 16px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .app-header h1 { font-size: 1.3rem; font-weight: 700; }
+        .app-header p { font-size: 0.75rem; opacity: 0.9; margin-top: 2px; }
+
+        .tab-nav {
+            display: flex;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 60px;
+            z-index: 99;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 8px;
+            border: none;
+            background: transparent;
+            font-size: 0.75rem;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-btn.active {
+            color: #374151;
+            border-bottom-color: #374151;
+            font-weight: 600;
+        }
+
+        .tab-content { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
+        .tab-content.active { display: block; }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group { margin-bottom: 14px; }
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+            background: #f3f4f6;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #6b7280;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-full { width: 100%; }
+        .btn-primary { background: #cc0000; color: white; }
+        .btn-primary:active { background: #990000; transform: scale(0.98); }
+        .btn-secondary { background: #e5e7eb; color: #374151; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-outline { background: transparent; border: 2px solid #d1d5db; color: #374151; }
+        .btn-whatsapp { background: #25d366; color: white; }
+        .btn-email { background: #ea4335; color: white; }
+        .btn-group { display: flex; gap: 10px; margin-top: 12px; }
+
+        /* Paste Area */
+        .paste-area {
+            border: 3px dashed #6b7280;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 16px;
+        }
+        .paste-area:hover, .paste-area.dragover {
+            background: #e5e7eb;
+            border-color: #4b5563;
+        }
+        .paste-area h3 { color: #1f2937; margin-bottom: 8px; font-size: 1rem; }
+        .paste-area p { color: #6b7280; font-size: 0.8rem; }
+        .paste-area textarea {
+            width: 100%;
+            min-height: 120px;
+            margin-top: 12px;
+            padding: 12px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            resize: vertical;
+            background: #f3f4f6;
+        }
+
+        .format-hint {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.8rem;
+        }
+        .format-hint code {
+            background: #fde68a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        /* Item Cards */
+        .item-card {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            border-left: 4px solid #cc0000;
+        }
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .item-partno {
+            font-weight: 700;
+            color: #1f2937;
+            font-size: 0.9rem;
+        }
+        .item-desc {
+            font-size: 0.85rem;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+        .item-details {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+        .item-details span { background: #e5e7eb; padding: 2px 8px; border-radius: 4px; }
+        .item-amount {
+            font-weight: 700;
+            color: #1f2937;
+            font-size: 0.95rem;
+        }
+        .item-remark {
+            font-size: 0.75rem;
+            color: #f59e0b;
+            font-style: italic;
+            margin-top: 4px;
+        }
+        .item-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .item-actions button {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            border-radius: 6px;
+        }
+
+        /* Summary */
+        .summary-card { background: #f0fdf4; border: 2px solid #10b981; }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+        .summary-row.total {
+            border-top: 2px solid #10b981;
+            margin-top: 8px;
+            padding-top: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #059669;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            border-radius: 20px 20px 0 0;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .modal-header {
+            background: #cc0000;
+            color: white;
+            padding: 16px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-body { padding: 16px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 16px; border-top: 1px solid #e5e7eb; }
+        .modal-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            z-index: 300;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .toast.show { opacity: 1; }
+
+        /* History */
+        .history-item {
+            background: white;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .history-no { font-weight: 700; color: #1f2937; }
+        .history-date { font-size: 0.8rem; color: #6b7280; }
+        .history-customer { font-weight: 600; margin-bottom: 4px; }
+        .history-amount { color: #059669; font-weight: 700; }
+        .history-actions { display: flex; gap: 6px; margin-top: 10px; }
+        .history-actions button { font-size: 0.75rem; padding: 6px 10px; }
+
+        /* Preview */
+        .preview-container {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            font-size: 0.75rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .preview-header-company {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .preview-logo {
+            width: 120px;
+            height: auto;
+        }
+        .preview-company-info {
+            font-size: 0.7rem;
+            line-height: 1.4;
+        }
+        .preview-title {
+            background: #9ca3af;
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            margin: 12px 0;
+        }
+        .preview-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+            font-size: 0.75rem;
+        }
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.7rem;
+            margin-bottom: 16px;
+        }
+        .preview-table th {
+            background: #6b7280;
+            color: white;
+            padding: 6px 4px;
+            text-align: left;
+            font-size: 0.65rem;
+        }
+        .preview-table td {
+            padding: 6px 4px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .preview-table .amount-col { text-align: right; }
+        .preview-totals {
+            text-align: right;
+            margin-bottom: 16px;
+        }
+        .preview-totals div { margin-bottom: 4px; }
+        .preview-note {
+            font-size: 0.7rem;
+            margin-bottom: 16px;
+        }
+        .preview-note strong { color: #1f2937; }
+        .preview-signature {
+            margin-top: 40px;
+            font-size: 0.75rem;
+        }
+
+        /* Settings */
+        .settings-section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .settings-section:last-child { border-bottom: none; }
+        .settings-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 12px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+        }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+
+        /* Sync Status */
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background: #f0fdf4;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.8rem;
+        }
+        .sync-status.error { background: #fef2f2; color: #dc2626; }
+        .sync-status.syncing { background: #fef3c7; color: #d97706; }
+        .sync-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+        .sync-status.error .sync-dot { background: #dc2626; }
+        .sync-status.syncing .sync-dot { background: #d97706; animation: pulse 1s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <h1>📋 QuickQuote</h1>
+            <p>PT. MAXIMUS INDO ASIA</p>
+        </header>
+
+        <nav class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('create')">➕ Buat</button>
+            <button class="tab-btn" onclick="switchTab('history')">📁 Riwayat</button>
+            <button class="tab-btn" onclick="switchTab('settings')">⚙️ Setting</button>
+        </nav>
+
+        <!-- TAB: CREATE QUOTATION -->
+        <div id="tab-create" class="tab-content active">
+            <!-- Sync Status -->
+            <div id="sync-status" class="sync-status" style="display:none;">
+                <div class="sync-dot"></div>
+                <span id="sync-text">Tersinkronisasi dengan Google Sheets</span>
+            </div>
+
+            <!-- Step 1: Customer Info -->
+            <div class="card">
+                <div class="card-title">📝 Informasi Quotation</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>No. Quotation</label>
+                        <input type="text" id="quoteNumber" placeholder="QUO-2026-0001">
+                    </div>
+                    <div class="form-group">
+                        <label>Tanggal</label>
+                        <input type="date" id="quoteDate">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Validity</label>
+                        <input type="text" id="validity" placeholder="30 Days">
+                    </div>
+                    <div class="form-group">
+                        <label>Attn (PIC)</label>
+                        <input type="text" id="attn" placeholder="Nama PIC">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Customer</label>
+                    <input type="text" id="customerName" placeholder="PT. NAMA CUSTOMER">
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <textarea id="customerAddress" rows="2" placeholder="Alamat lengkap customer"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Telp</label>
+                        <input type="text" id="customerPhone" placeholder="021-xxx">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="customerEmail" placeholder="email@company.com">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Items - Paste Area -->
+            <div class="card">
+                <div class="card-title">📦 Daftar Item</div>
+                
+                <div class="format-hint">
+                    💡 <strong>Format paste dari Google Sheets:</strong><br>
+                    <code>Part Number | Description | Qty | Unit | Unit Price | Remark</code><br>
+                    Contoh: <code>380905130 | LEFT SIDE BLADE | 1 | PCS | 2950000 | Indent 1-2 Month</code>
+                </div>
+
+                <div class="paste-area" id="paste-area" onclick="document.getElementById('paste-input').focus()">
+                    <h3>📋 Paste dari Google Sheets</h3>
+                    <p>Copy dari spreadsheet, lalu paste di bawah ini</p>
+                    <textarea id="paste-input" placeholder="Paste data di sini...
+Contoh:
+380905130	LEFT SIDE BLADE	1	PCS	2950000	Indent 1-2 Month
+380905143	RIGHT SIDE BLADE	1	PCS	2950000	Indent 1-2 Month
+805048195	HINGED COVER BOLT	40	PCS	17000	Indent 1-2 Month"></textarea>
+                </div>
+                <button class="btn btn-primary btn-full" onclick="parseAndAddItems()">
+                    ✨ Parse & Tambah Items
+                </button>
+
+                <div style="text-align: center; margin: 16px 0; color: #9ca3af;">atau</div>
+
+                <button class="btn btn-outline btn-full" onclick="openAddItemModal()">
+                    ➕ Tambah Manual
+                </button>
+            </div>
+
+            <!-- Items List -->
+            <div class="card" id="items-container" style="display: none;">
+                <div class="card-title">
+                    🛒 Items (<span id="items-count">0</span>)
+                    <button class="btn btn-danger" style="margin-left: auto; padding: 6px 12px; font-size: 0.75rem;" onclick="clearAllItems()">🗑️ Hapus Semua</button>
+                </div>
+                <div id="items-list"></div>
+            </div>
+
+            <!-- Summary -->
+            <div class="card summary-card" id="summary-container" style="display: none;">
+                <div class="card-title">💰 Ringkasan</div>
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="subtotal">Rp 0</span>
+                </div>
+                <div class="summary-row">
+                    <span>
+                        <label style="display: inline-flex; align-items: center; gap: 6px;">
+                            <input type="checkbox" id="include-tax" checked onchange="calculateTotal()">
+                            PPN (11%)
+                        </label>
+                    </span>
+                    <span id="tax-amount">Rp 0</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Grand Total</span>
+                    <span id="grand-total">Rp 0</span>
+                </div>
+            </div>
+
+            <!-- Note -->
+            <div class="card">
+                <div class="card-title">📝 Note / Terms</div>
+                <div class="form-group">
+                    <select id="note-template" onchange="applyNoteTemplate()">
+                        <option value="">-- Pilih Template Note --</option>
+                        <option value="indent_sea">Indent By Sea</option>
+                        <option value="indent_air">Indent By Air</option>
+                        <option value="ready_stock">Ready Stock</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <textarea id="quote-note" rows="5" placeholder="Catatan tambahan...">Indent By Sea
+TOP 30 Days
+Franco Jakarta
+
+All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-title">🚀 Generate Quotation</div>
+                <div class="form-group">
+                    <label>Quote by (Sales)</label>
+                    <input type="text" id="sales-name" placeholder="Nama Sales">
+                </div>
+                <button class="btn btn-primary btn-full" onclick="previewQuotation()" style="margin-bottom: 10px;">
+                    👁️ Preview Quotation
+                </button>
+                <div class="btn-group">
+                    <button class="btn btn-success btn-full" onclick="generateAndDownloadPDF()">
+                        📄 Download PDF
+                    </button>
+                    <button class="btn btn-whatsapp btn-full" onclick="shareWhatsApp()">
+                        📱 WhatsApp
+                    </button>
+                </div>
+                <button class="btn btn-outline btn-full" style="margin-top: 10px;" onclick="saveToGoogleSheets()">
+                    ☁️ Simpan ke Google Sheets
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB: HISTORY -->
+        <div id="tab-history" class="tab-content">
+            <div class="card">
+                <div class="card-title">🔍 Cari Quotation</div>
+                <div class="form-group">
+                    <input type="text" id="search-history" placeholder="Cari no. quotation, customer..." oninput="searchHistory()">
+                </div>
+            </div>
+
+            <div id="history-list"></div>
+        </div>
+
+        <!-- TAB: SETTINGS -->
+        <div id="tab-settings" class="tab-content">
+            <div class="card">
+                <div class="settings-section">
+                    <div class="settings-title">🏢 Informasi Perusahaan</div>
+                    <div class="form-group">
+                        <label>Nama Perusahaan</label>
+                        <input type="text" id="companyName" value="PT. MAXIMUS INDO ASIA">
+                    </div>
+                    <div class="form-group">
+                        <label>Alamat</label>
+                        <textarea id="companyAddress" rows="2">Jl. Pantai Indah Barat No. 1
+Jakarta Utara - Indonesia
+DKI Jakarta -</textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Telp</label>
+                            <input type="text" id="companyPhone" placeholder="021-xxx">
+                        </div>
+                        <div class="form-group">
+                            <label>Fax</label>
+                            <input type="text" id="companyFax" placeholder="021-xxx">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Info Bank</label>
+                        <input type="text" id="bankInfo" value="Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">🔗 Google Sheets Integration</div>
+                    <div class="format-hint">
+                        📌 Untuk menghubungkan dengan Google Sheets, masukkan Web App URL dari Google Apps Script.
+                    </div>
+                    <div class="form-group">
+                        <label>Google Sheets Web App URL</label>
+                        <input type="text" id="sheetsWebAppUrl" placeholder="https://script.google.com/macros/s/xxx/exec">
+                    </div>
+                    <div class="form-group">
+                        <label>Sheet ID (untuk referensi)</label>
+                        <input type="text" id="sheetsId" placeholder="1abc...xyz">
+                    </div>
+                    <button class="btn btn-outline btn-full" onclick="testSheetsConnection()">
+                        🔄 Test Koneksi
+                    </button>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">📄 Format Quotation</div>
+                    <div class="form-group">
+                        <label>Prefix No. Quotation</label>
+                        <input type="text" id="quotePrefix" value="QUO" placeholder="QUO">
+                    </div>
+                    <div class="form-group">
+                        <label>Default Validity</label>
+                        <input type="text" id="defaultValidity" value="30 Days">
+                    </div>
+                    <div class="form-group">
+                        <label>Default PPN (%)</label>
+                        <input type="number" id="taxRate" value="11" min="0" max="100">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">📝 Template Notes</div>
+                    <div class="form-group">
+                        <label>Indent By Sea</label>
+                        <textarea id="noteIndentSea" rows="4">Indent By Sea
+TOP 30 Days
+Franco Jakarta
+
+All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Indent By Air</label>
+                        <textarea id="noteIndentAir" rows="4">Indent By Air
+TOP 14 Days
+Franco Jakarta
+
+All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Ready Stock</label>
+                        <textarea id="noteReadyStock" rows="4">Ready Stock
+TOP 7 Days
+Franco Jakarta
+
+All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-full" onclick="saveSettings()">
+                    💾 Simpan Pengaturan
+                </button>
+
+                <div class="btn-group" style="margin-top: 16px;">
+                    <button class="btn btn-outline btn-full" onclick="exportData()">
+                        📤 Export Data
+                    </button>
+                    <button class="btn btn-outline btn-full" onclick="importData()">
+                        📥 Import Data
+                    </button>
+                </div>
+
+                <button class="btn btn-danger btn-full" style="margin-top: 16px;" onclick="resetAllData()">
+                    🗑️ Reset Semua Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Add/Edit Item -->
+    <div id="item-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="modal-title">Tambah Item</span>
+                <button class="modal-close" onclick="closeItemModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Part Number *</label>
+                    <input type="text" id="item-partno" placeholder="380905130">
+                </div>
+                <div class="form-group">
+                    <label>Description *</label>
+                    <input type="text" id="item-desc" placeholder="LEFT SIDE BLADE">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Qty *</label>
+                        <input type="number" id="item-qty" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Unit</label>
+                        <select id="item-unit">
+                            <option value="PCS">PCS</option>
+                            <option value="SET">SET</option>
+                            <option value="UNIT">UNIT</option>
+                            <option value="BOX">BOX</option>
+                            <option value="KG">KG</option>
+                            <option value="MTR">MTR</option>
+                            <option value="LTR">LTR</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Unit Price (IDR) *</label>
+                    <input type="text" id="item-price" placeholder="2,950,000" oninput="formatPriceInput(this)">
+                </div>
+                <div class="form-group">
+                    <label>Remark</label>
+                    <input type="text" id="item-remark" placeholder="Indent 1-2 Month">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-full" onclick="saveItem()">💾 Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Preview -->
+    <div id="preview-modal" class="modal">
+        <div class="modal-content" style="max-height: 95vh;">
+            <div class="modal-header">
+                <span>Preview Quotation</span>
+                <button class="modal-close" onclick="closePreviewModal()">×</button>
+            </div>
+            <div class="modal-body" id="preview-body">
+                <!-- Preview content will be generated here -->
+            </div>
+            <div class="modal-footer">
+                <div class="btn-group">
+                    <button class="btn btn-success btn-full" onclick="generateAndDownloadPDF()">📄 Download PDF</button>
+                    <button class="btn btn-whatsapp btn-full" onclick="shareWhatsApp()">📱 Share</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+    // ============ STATE ============
+    let items = [];
+    let editingIndex = -1;
+    let settings = {};
+    let history = [];
+
+    // ============ INIT ============
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSettings();
+        loadHistory();
+        initQuotation();
+        setupPasteListener();
+    });
+
+    function loadSettings() {
+        const saved = localStorage.getItem('maximus_settings');
+        settings = saved ? JSON.parse(saved) : {
+            companyName: 'PT. MAXIMUS INDO ASIA',
+            companyAddress: 'Jl. Pantai Indah Barat No. 1\nJakarta Utara - Indonesia\nDKI Jakarta -',
+            companyPhone: '',
+            companyFax: '',
+            bankInfo: 'Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia',
+            quotePrefix: 'QUO',
+            defaultValidity: '30 Days',
+            taxRate: 11,
+            sheetsWebAppUrl: '',
+            sheetsId: '',
+            noteIndentSea: 'Indent By Sea\nTOP 30 Days\nFranco Jakarta\n\nAll payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia',
+            noteIndentAir: 'Indent By Air\nTOP 14 Days\nFranco Jakarta\n\nAll payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia',
+            noteReadyStock: 'Ready Stock\nTOP 7 Days\nFranco Jakarta\n\nAll payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia'
+        };
+
+        // Apply to form
+        document.getElementById('companyName').value = settings.companyName;
+        document.getElementById('companyAddress').value = settings.companyAddress;
+        document.getElementById('companyPhone').value = settings.companyPhone || '';
+        document.getElementById('companyFax').value = settings.companyFax || '';
+        document.getElementById('bankInfo').value = settings.bankInfo;
+        document.getElementById('quotePrefix').value = settings.quotePrefix;
+        document.getElementById('defaultValidity').value = settings.defaultValidity;
+        document.getElementById('taxRate').value = settings.taxRate;
+        document.getElementById('sheetsWebAppUrl').value = settings.sheetsWebAppUrl || '';
+        document.getElementById('sheetsId').value = settings.sheetsId || '';
+        document.getElementById('noteIndentSea').value = settings.noteIndentSea;
+        document.getElementById('noteIndentAir').value = settings.noteIndentAir;
+        document.getElementById('noteReadyStock').value = settings.noteReadyStock;
+    }
+
+    function loadHistory() {
+        const saved = localStorage.getItem('maximus_history');
+        history = saved ? JSON.parse(saved) : [];
+        renderHistory();
+    }
+
+    function initQuotation() {
+        // Generate quote number
+        const prefix = settings.quotePrefix || 'QUO';
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const num = String(history.length + 1).padStart(4, '0');
+        document.getElementById('quoteNumber').value = `${prefix}-${year}${month}-${num}`;
+
+        // Set date
+        document.getElementById('quoteDate').value = date.toISOString().split('T')[0];
+        
+        // Set validity
+        document.getElementById('validity').value = settings.defaultValidity || '30 Days';
+
+        // Check sheets connection
+        if (settings.sheetsWebAppUrl) {
+            document.getElementById('sync-status').style.display = 'flex';
+        }
+    }
+
+    function setupPasteListener() {
+        const pasteArea = document.getElementById('paste-area');
+        const pasteInput = document.getElementById('paste-input');
+
+        // Drag and drop
+        pasteArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            pasteArea.classList.add('dragover');
+        });
+
+        pasteArea.addEventListener('dragleave', () => {
+            pasteArea.classList.remove('dragover');
+        });
+
+        pasteArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            pasteArea.classList.remove('dragover');
+            const text = e.dataTransfer.getData('text');
+            pasteInput.value = text;
+        });
+
+        // Global paste
+        document.addEventListener('paste', (e) => {
+            if (document.activeElement.tagName !== 'TEXTAREA' && 
+                document.activeElement.tagName !== 'INPUT') {
+                const text = e.clipboardData.getData('text');
+                pasteInput.value = text;
+                pasteInput.focus();
+            }
+        });
+    }
+
+    // ============ TAB NAVIGATION ============
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
+    }
+
+    // ============ PARSE & ADD ITEMS ============
+    function parseAndAddItems() {
+        const input = document.getElementById('paste-input').value.trim();
+        if (!input) {
+            showToast('⚠️ Tidak ada data untuk di-parse');
+            return;
+        }
+
+        const lines = input.split('\n').filter(line => line.trim());
+        let addedCount = 0;
+
+        lines.forEach(line => {
+            // Support both tab-separated and pipe-separated
+            let cols = line.includes('\t') ? line.split('\t') : line.split('|');
+            cols = cols.map(c => c.trim());
+
+            if (cols.length >= 3) {
+                const item = {
+                    partNumber: cols[0] || '',
+                    description: cols[1] || '',
+                    qty: parseInt(cols[2]) || 1,
+                    unit: cols[3] || 'PCS',
+                    unitPrice: parseCurrency(cols[4] || '0'),
+                    remark: cols[5] || ''
+                };
+
+                // Only add if has part number or description
+                if (item.partNumber || item.description) {
+                    items.push(item);
+                    addedCount++;
+                }
+            }
+        });
+
+        if (addedCount > 0) {
+            renderItems();
+            calculateTotal();
+            document.getElementById('paste-input').value = '';
+            showToast(`✅ ${addedCount} item berhasil ditambahkan`);
+        } else {
+            showToast('⚠️ Format tidak valid. Gunakan format: Part Number | Description | Qty | Unit | Price | Remark');
+        }
+    }
+
+    // ============ ITEM MODAL ============
+    function openAddItemModal() {
+        editingIndex = -1;
+        document.getElementById('modal-title').textContent = 'Tambah Item';
+        document.getElementById('item-partno').value = '';
+        document.getElementById('item-desc').value = '';
+        document.getElementById('item-qty').value = '1';
+        document.getElementById('item-unit').value = 'PCS';
+        document.getElementById('item-price').value = '';
+        document.getElementById('item-remark').value = '';
+        document.getElementById('item-modal').classList.add('show');
+    }
+
+    function editItem(index) {
+        editingIndex = index;
+        const item = items[index];
+        document.getElementById('modal-title').textContent = 'Edit Item';
+        document.getElementById('item-partno').value = item.partNumber;
+        document.getElementById('item-desc').value = item.description;
+        document.getElementById('item-qty').value = item.qty;
+        document.getElementById('item-unit').value = item.unit;
+        document.getElementById('item-price').value = formatNumber(item.unitPrice);
+        document.getElementById('item-remark').value = item.remark || '';
+        document.getElementById('item-modal').classList.add('show');
+    }
+
+    function closeItemModal() {
+        document.getElementById('item-modal').classList.remove('show');
+    }
+
+    function saveItem() {
+        const partNumber = document.getElementById('item-partno').value.trim();
+        const description = document.getElementById('item-desc').value.trim();
+        const qty = parseInt(document.getElementById('item-qty').value) || 1;
+        const unit = document.getElementById('item-unit').value;
+        const unitPrice = parseCurrency(document.getElementById('item-price').value);
+        const remark = document.getElementById('item-remark').value.trim();
+
+        if (!partNumber && !description) {
+            showToast('⚠️ Part Number atau Description harus diisi');
+            return;
+        }
+
+        const item = { partNumber, description, qty, unit, unitPrice, remark };
+
+        if (editingIndex >= 0) {
+            items[editingIndex] = item;
+            showToast('✅ Item berhasil diupdate');
+        } else {
+            items.push(item);
+            showToast('✅ Item berhasil ditambahkan');
+        }
+
+        closeItemModal();
+        renderItems();
+        calculateTotal();
+    }
+
+    function deleteItem(index) {
+        if (confirm('Hapus item ini?')) {
+            items.splice(index, 1);
+            renderItems();
+            calculateTotal();
+            showToast('🗑️ Item dihapus');
+        }
+    }
+
+    function clearAllItems() {
+        if (confirm('Hapus semua item?')) {
+            items = [];
+            renderItems();
+            calculateTotal();
+            showToast('🗑️ Semua item dihapus');
+        }
+    }
+
+    // ============ RENDER ITEMS ============
+    function renderItems() {
+        const container = document.getElementById('items-container');
+        const list = document.getElementById('items-list');
+        const count = document.getElementById('items-count');
+
+        if (items.length === 0) {
+            container.style.display = 'none';
+            document.getElementById('summary-container').style.display = 'none';
+            return;
+        }
+
+        container.style.display = 'block';
+        document.getElementById('summary-container').style.display = 'block';
+        count.textContent = items.length;
+
+        list.innerHTML = items.map((item, index) => {
+            const amount = item.qty * item.unitPrice;
+            return `
+                <div class="item-card">
+                    <div class="item-header">
+                        <div>
+                            <div class="item-partno">${item.partNumber}</div>
+                            <div class="item-desc">${item.description}</div>
+                        </div>
+                        <div class="item-amount">${formatRupiah(amount)}</div>
+                    </div>
+                    <div class="item-details">
+                        <span>${item.qty} ${item.unit}</span>
+                        <span>@ ${formatRupiah(item.unitPrice)}</span>
+                    </div>
+                    ${item.remark ? `<div class="item-remark">📌 ${item.remark}</div>` : ''}
+                    <div class="item-actions">
+                        <button class="btn btn-secondary" onclick="editItem(${index})">✏️ Edit</button>
+                        <button class="btn btn-danger" onclick="deleteItem(${index})">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ============ CALCULATIONS ============
+    function calculateTotal() {
+        const subtotal = items.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0);
+        const includeTax = document.getElementById('include-tax').checked;
+        const taxRate = parseFloat(settings.taxRate) || 11;
+        const tax = includeTax ? subtotal * (taxRate / 100) : 0;
+        const grandTotal = subtotal + tax;
+
+        document.getElementById('subtotal').textContent = formatRupiah(subtotal);
+        document.getElementById('tax-amount').textContent = formatRupiah(tax);
+        document.getElementById('grand-total').textContent = formatRupiah(grandTotal);
+
+        return { subtotal, tax, grandTotal };
+    }
+
+    // ============ NOTE TEMPLATES ============
+    function applyNoteTemplate() {
+        const template = document.getElementById('note-template').value;
+        const noteField = document.getElementById('quote-note');
+
+        switch (template) {
+            case 'indent_sea':
+                noteField.value = settings.noteIndentSea || document.getElementById('noteIndentSea').value;
+                break;
+            case 'indent_air':
+                noteField.value = settings.noteIndentAir || document.getElementById('noteIndentAir').value;
+                break;
+            case 'ready_stock':
+                noteField.value = settings.noteReadyStock || document.getElementById('noteReadyStock').value;
+                break;
+        }
+    }
+
+    // ============ PREVIEW ============
+    function previewQuotation() {
+        if (items.length === 0) {
+            showToast('⚠️ Tambahkan minimal 1 item');
+            return;
+        }
+
+        const totals = calculateTotal();
+        const quoteData = getQuoteData();
+
+        const previewHtml = `
+            <div class="preview-container">
+                <div class="preview-header-company">
+                    <div>
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 50'%3E%3Ctext x='10' y='35' font-family='Arial Black' font-size='28' fill='%23111827'%3EMAXIMUS%3C/text%3E%3C/svg%3E" class="preview-logo" alt="Logo">
+                    </div>
+                    <div class="preview-company-info">
+                        <strong>${settings.companyName}</strong><br>
+                        ${settings.companyAddress.replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+
+                <div class="preview-title">Quotation</div>
+
+                <div class="preview-info-grid">
+                    <div>
+                        <strong>Customer:</strong> ${quoteData.customerName}<br>
+                        <strong>Address:</strong> ${quoteData.customerAddress}<br>
+                        <strong>Telp:</strong> ${quoteData.customerPhone}
+                    </div>
+                    <div>
+                        <strong>No:</strong> ${quoteData.quoteNumber}<br>
+                        <strong>Date:</strong> ${formatDate(quoteData.quoteDate)}<br>
+                        <strong>Validity:</strong> ${quoteData.validity}<br>
+                        <strong>Attn:</strong> ${quoteData.attn}
+                    </div>
+                </div>
+
+                <table class="preview-table">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Part Number</th>
+                            <th>Description</th>
+                            <th>Qty</th>
+                            <th>Unit Price</th>
+                            <th>Amount</th>
+                            <th>Remark</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${items.map((item, i) => `
+                            <tr>
+                                <td>${i + 1}</td>
+                                <td>${item.partNumber}</td>
+                                <td>${item.description}</td>
+                                <td>${item.qty} ${item.unit}</td>
+                                <td class="amount-col">${formatRupiah(item.unitPrice)}</td>
+                                <td class="amount-col">${formatRupiah(item.qty * item.unitPrice)}</td>
+                                <td style="color: #6b7280; font-size: 0.65rem;">${item.remark}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div class="preview-totals">
+                    <div><strong>Total:</strong> ${formatRupiah(totals.subtotal)}</div>
+                    <div><strong>Tax (11%):</strong> ${formatRupiah(totals.tax)}</div>
+                    <div style="font-size: 1rem; color: #1f2937;"><strong>Grand Total:</strong> ${formatRupiah(totals.grandTotal)}</div>
+                </div>
+
+                <div class="preview-note">
+                    <strong style="color: #1f2937;">NOTE:</strong><br>
+                    ${quoteData.note.replace(/\n/g, '<br>')}
+                </div>
+
+                <div class="preview-signature">
+                    Quote by,<br><br><br>
+                    <strong style="color: #1f2937;">${quoteData.salesName}</strong>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('preview-body').innerHTML = previewHtml;
+        document.getElementById('preview-modal').classList.add('show');
+    }
+
+    function closePreviewModal() {
+        document.getElementById('preview-modal').classList.remove('show');
+    }
+
+    // ============ PDF GENERATION ============
+    function generateAndDownloadPDF() {
+        if (items.length === 0) {
+            showToast('⚠️ Tambahkan minimal 1 item');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const quoteData = getQuoteData();
+        const totals = calculateTotal();
+
+        // Colors
+        const gray = [107, 114, 128];
+        const black = [0, 0, 0];
+        const lightGray = [156, 163, 175];
+
+        // Header - Logo text
+        doc.setFontSize(24);
+        doc.setTextColor(...black);
+        doc.setFont('helvetica', 'bold');
+        doc.text('MAXIMUS', 14, 20);
+
+        // Company info
+        doc.setFontSize(9);
+        doc.setTextColor(...black);
+        doc.setFont('helvetica', 'normal');
+        const addressLines = settings.companyAddress.split('\n');
+        let y = 25;
+        doc.text(settings.companyName, 14, y);
+        addressLines.forEach(line => {
+            y += 4;
+            doc.text(line, 14, y);
+        });
+
+        // Quotation title bar
+        doc.setFillColor(...lightGray);
+        doc.rect(14, 45, 182, 10, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Quotation', 105, 52, { align: 'center' });
+
+        // Customer info (left side)
+        doc.setTextColor(...black);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        y = 65;
+        doc.text(`Customer`, 14, y);
+        doc.text(`: ${quoteData.customerName}`, 40, y);
+        y += 5;
+        doc.text(`Address`, 14, y);
+        doc.text(`: ${quoteData.customerAddress}`, 40, y);
+        y += 5;
+        doc.text(`Telp`, 14, y);
+        doc.text(`: ${quoteData.customerPhone}`, 40, y);
+        y += 5;
+        doc.text(`Fax`, 14, y);
+        doc.text(`: `, 40, y);
+
+        // Quote info (right side)
+        y = 65;
+        doc.text(`No.`, 120, y);
+        doc.text(`: ${quoteData.quoteNumber}`, 145, y);
+        y += 5;
+        doc.text(`Date`, 120, y);
+        doc.text(`: ${formatDate(quoteData.quoteDate)}`, 145, y);
+        y += 5;
+        doc.text(`Validity`, 120, y);
+        doc.text(`: ${quoteData.validity}`, 145, y);
+        y += 5;
+        doc.text(`Email`, 120, y);
+        doc.text(`: ${quoteData.customerEmail}`, 145, y);
+        y += 5;
+        doc.text(`Attn`, 120, y);
+        doc.text(`: ${quoteData.attn}`, 145, y);
+
+        // Table
+        const tableData = items.map((item, i) => [
+            i + 1,
+            item.partNumber,
+            item.description,
+            item.qty,
+            item.unit,
+            'Rp ' + formatNumber(item.unitPrice),
+            'Rp ' + formatNumber(item.qty * item.unitPrice),
+            item.remark
+        ]);
+
+        doc.autoTable({
+            startY: 95,
+            head: [['No', 'Part Number', 'Description', 'Qty', 'Unit', 'Unit Price (IDR)', 'Amount (IDR)', 'Remark']],
+            body: tableData,
+            theme: 'grid',
+            headStyles: {
+                fillColor: gray,
+                textColor: [255, 255, 255],
+                fontStyle: 'bold',
+                fontSize: 8
+            },
+            bodyStyles: {
+                fontSize: 8
+            },
+            columnStyles: {
+                0: { cellWidth: 10, halign: 'center' },
+                1: { cellWidth: 25 },
+                2: { cellWidth: 40 },
+                3: { cellWidth: 12, halign: 'center' },
+                4: { cellWidth: 12, halign: 'center' },
+                5: { cellWidth: 25, halign: 'right' },
+                6: { cellWidth: 25, halign: 'right' },
+                7: { cellWidth: 30, textColor: gray, fontSize: 7 }
+            }
+        });
+
+        // Totals
+        let finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(10);
+        doc.text('Total', 140, finalY);
+        doc.text('Rp', 165, finalY);
+        doc.text(formatNumber(totals.subtotal), 195, finalY, { align: 'right' });
+        
+        finalY += 6;
+        doc.text('Tax', 140, finalY);
+        doc.text('Rp', 165, finalY);
+        doc.text(formatNumber(totals.tax), 195, finalY, { align: 'right' });
+        
+        finalY += 6;
+        doc.setFont('helvetica', 'bold');
+        doc.text('Grand Total', 140, finalY);
+        doc.text('Rp', 165, finalY);
+        doc.text(formatNumber(totals.grandTotal), 195, finalY, { align: 'right' });
+
+        // Note
+        finalY += 15;
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...black);
+        doc.text('NOTE :', 14, finalY);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...black);
+        
+        const noteLines = quoteData.note.split('\n');
+        noteLines.forEach((line, i) => {
+            if (i === noteLines.length - 1 && line.includes('All payment')) {
+                doc.setFont('helvetica', 'bolditalic');
+            }
+            finalY += 5;
+            doc.text(line, 35, finalY);
+        });
+
+        // Signature
+        finalY += 20;
+        doc.setFont('helvetica', 'normal');
+        doc.text('Quote by,', 14, finalY);
+        finalY += 20;
+        doc.setTextColor(...black);
+        doc.setFont('helvetica', 'bold');
+        doc.text(quoteData.salesName, 14, finalY);
+
+        // Save
+        doc.save(`${quoteData.quoteNumber}.pdf`);
+        showToast('✅ PDF berhasil di-download');
+
+        // Save to history
+        saveToHistory(quoteData, totals);
+    }
+
+    // ============ GET QUOTE DATA ============
+    function getQuoteData() {
+        return {
+            quoteNumber: document.getElementById('quoteNumber').value,
+            quoteDate: document.getElementById('quoteDate').value,
+            validity: document.getElementById('validity').value,
+            attn: document.getElementById('attn').value,
+            customerName: document.getElementById('customerName').value,
+            customerAddress: document.getElementById('customerAddress').value,
+            customerPhone: document.getElementById('customerPhone').value,
+            customerEmail: document.getElementById('customerEmail').value,
+            note: document.getElementById('quote-note').value,
+            salesName: document.getElementById('sales-name').value,
+            items: items
+        };
+    }
+
+    // ============ HISTORY ============
+    function saveToHistory(quoteData, totals) {
+        const historyItem = {
+            id: Date.now(),
+            ...quoteData,
+            subtotal: totals.subtotal,
+            tax: totals.tax,
+            grandTotal: totals.grandTotal,
+            createdAt: new Date().toISOString()
+        };
+
+        history.unshift(historyItem);
+        localStorage.setItem('maximus_history', JSON.stringify(history));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const container = document.getElementById('history-list');
+        
+        if (history.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📁</div>
+                    <p>Belum ada riwayat quotation</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = history.map(item => `
+            <div class="history-item">
+                <div class="history-header">
+                    <span class="history-no">${item.quoteNumber}</span>
+                    <span class="history-date">${formatDate(item.quoteDate)}</span>
+                </div>
+                <div class="history-customer">${item.customerName}</div>
+                <div class="history-amount">${formatRupiah(item.grandTotal)}</div>
+                <div style="font-size: 0.75rem; color: #6b7280;">${item.items.length} items</div>
+                <div class="history-actions">
+                    <button class="btn btn-secondary" onclick="loadFromHistory(${item.id})">📋 Load</button>
+                    <button class="btn btn-outline" onclick="duplicateQuotation(${item.id})">📄 Duplicate</button>
+                    <button class="btn btn-danger" onclick="deleteHistory(${item.id})">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function loadFromHistory(id) {
+        const item = history.find(h => h.id === id);
+        if (!item) return;
+
+        document.getElementById('quoteNumber').value = item.quoteNumber;
+        document.getElementById('quoteDate').value = item.quoteDate;
+        document.getElementById('validity').value = item.validity;
+        document.getElementById('attn').value = item.attn;
+        document.getElementById('customerName').value = item.customerName;
+        document.getElementById('customerAddress').value = item.customerAddress;
+        document.getElementById('customerPhone').value = item.customerPhone;
+        document.getElementById('customerEmail').value = item.customerEmail;
+        document.getElementById('quote-note').value = item.note;
+        document.getElementById('sales-name').value = item.salesName;
+        items = [...item.items];
+
+        renderItems();
+        calculateTotal();
+        switchTab('create');
+        showToast('✅ Quotation dimuat');
+    }
+
+    function duplicateQuotation(id) {
+        const item = history.find(h => h.id === id);
+        if (!item) return;
+
+        // Generate new quote number
+        const prefix = settings.quotePrefix || 'QUO';
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const num = String(history.length + 1).padStart(4, '0');
+
+        document.getElementById('quoteNumber').value = `${prefix}-${year}${month}-${num}`;
+        document.getElementById('quoteDate').value = date.toISOString().split('T')[0];
+        document.getElementById('validity').value = item.validity;
+        document.getElementById('attn').value = item.attn;
+        document.getElementById('customerName').value = item.customerName;
+        document.getElementById('customerAddress').value = item.customerAddress;
+        document.getElementById('customerPhone').value = item.customerPhone;
+        document.getElementById('customerEmail').value = item.customerEmail;
+        document.getElementById('quote-note').value = item.note;
+        document.getElementById('sales-name').value = item.salesName;
+        items = [...item.items];
+
+        renderItems();
+        calculateTotal();
+        switchTab('create');
+        showToast('✅ Quotation diduplikasi');
+    }
+
+    function deleteHistory(id) {
+        if (confirm('Hapus quotation ini dari riwayat?')) {
+            history = history.filter(h => h.id !== id);
+            localStorage.setItem('maximus_history', JSON.stringify(history));
+            renderHistory();
+            showToast('🗑️ Riwayat dihapus');
+        }
+    }
+
+    function searchHistory() {
+        const query = document.getElementById('search-history').value.toLowerCase();
+        const filtered = history.filter(item => 
+            item.quoteNumber.toLowerCase().includes(query) ||
+            item.customerName.toLowerCase().includes(query)
+        );
+
+        const container = document.getElementById('history-list');
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">🔍</div>
+                    <p>Tidak ditemukan</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = filtered.map(item => `
+            <div class="history-item">
+                <div class="history-header">
+                    <span class="history-no">${item.quoteNumber}</span>
+                    <span class="history-date">${formatDate(item.quoteDate)}</span>
+                </div>
+                <div class="history-customer">${item.customerName}</div>
+                <div class="history-amount">${formatRupiah(item.grandTotal)}</div>
+                <div class="history-actions">
+                    <button class="btn btn-secondary" onclick="loadFromHistory(${item.id})">📋 Load</button>
+                    <button class="btn btn-outline" onclick="duplicateQuotation(${item.id})">📄 Duplicate</button>
+                    <button class="btn btn-danger" onclick="deleteHistory(${item.id})">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ============ GOOGLE SHEETS INTEGRATION ============
+    async function saveToGoogleSheets() {
+        const url = settings.sheetsWebAppUrl;
+        if (!url) {
+            showToast('⚠️ Setup Google Sheets URL di Settings');
+            return;
+        }
+
+        const quoteData = getQuoteData();
+        const totals = calculateTotal();
+
+        // Update sync status
+        const syncStatus = document.getElementById('sync-status');
+        const syncText = document.getElementById('sync-text');
+        syncStatus.className = 'sync-status syncing';
+        syncText.textContent = 'Menyimpan ke Google Sheets...';
+        syncStatus.style.display = 'flex';
+
+        try {
+            const payload = {
+                action: 'saveQuotation',
+                data: {
+                    quoteNumber: quoteData.quoteNumber,
+                    quoteDate: quoteData.quoteDate,
+                    customerName: quoteData.customerName,
+                    customerAddress: quoteData.customerAddress,
+                    customerPhone: quoteData.customerPhone,
+                    customerEmail: quoteData.customerEmail,
+                    attn: quoteData.attn,
+                    validity: quoteData.validity,
+                    items: items.map((item, i) => ({
+                        no: i + 1,
+                        partNumber: item.partNumber,
+                        description: item.description,
+                        qty: item.qty,
+                        unit: item.unit,
+                        unitPrice: item.unitPrice,
+                        amount: item.qty * item.unitPrice,
+                        remark: item.remark
+                    })),
+                    subtotal: totals.subtotal,
+                    tax: totals.tax,
+                    grandTotal: totals.grandTotal,
+                    note: quoteData.note,
+                    salesName: quoteData.salesName,
+                    createdAt: new Date().toISOString()
+                }
+            };
+
+            const response = await fetch(url, {
+                method: 'POST',
+                redirect: 'follow',
+                body: JSON.stringify(payload)
+            });
+
+            const responseText = await response.text();
+            let result = null;
+            try {
+                result = JSON.parse(responseText);
+            } catch (parseError) {
+                throw new Error(`Respon tidak valid (${response.status}): ${responseText}`);
+            }
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${result.error || responseText}`);
+            }
+
+            if (result.success) {
+                syncStatus.className = 'sync-status';
+                syncText.textContent = 'Tersimpan ke Google Sheets ✓';
+                showToast('✅ Data tersimpan ke Google Sheets');
+            } else {
+                throw new Error(result.error || 'Unknown error');
+            }
+
+        } catch (error) {
+            console.error('Error saving to Sheets:', error);
+            syncStatus.className = 'sync-status error';
+            syncText.textContent = 'Gagal menyimpan ke Google Sheets';
+            showToast(`❌ Gagal menyimpan: ${error.message}`);
+        }
+    }
+
+    async function testSheetsConnection() {
+        const url = document.getElementById('sheetsWebAppUrl').value;
+        if (!url) {
+            showToast('⚠️ Masukkan Web App URL');
+            return;
+        }
+
+        showToast('🔄 Testing koneksi...');
+
+        try {
+            const response = await fetch(url + '?action=test', {
+                method: 'GET',
+                redirect: 'follow'
+            });
+            const result = await response.json();
+            if (result.status === 'ok') {
+                showToast('✅ Koneksi berhasil!');
+            } else {
+                showToast('✅ API ready: ' + result.message);
+            }
+        } catch (error) {
+            showToast('❌ Gagal terhubung: ' + error.message);
+        }
+    }
+
+    // ============ SHARE ============
+    function shareWhatsApp() {
+        if (items.length === 0) {
+            showToast('⚠️ Tambahkan minimal 1 item');
+            return;
+        }
+
+        const quoteData = getQuoteData();
+        const totals = calculateTotal();
+
+        let message = `*QUOTATION*\n`;
+        message += `No: ${quoteData.quoteNumber}\n`;
+        message += `Date: ${formatDate(quoteData.quoteDate)}\n\n`;
+        message += `*Customer:* ${quoteData.customerName}\n`;
+        message += `*Attn:* ${quoteData.attn}\n\n`;
+        message += `*Items:*\n`;
+        
+        items.forEach((item, i) => {
+            message += `${i + 1}. ${item.partNumber} - ${item.description}\n`;
+            message += `   ${item.qty} ${item.unit} x ${formatRupiah(item.unitPrice)} = ${formatRupiah(item.qty * item.unitPrice)}\n`;
+        });
+
+        message += `\n*Grand Total: ${formatRupiah(totals.grandTotal)}*\n\n`;
+        message += `${quoteData.note}\n\n`;
+        message += `_Quote by: ${quoteData.salesName}_`;
+
+        const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    }
+
+    // ============ SETTINGS ============
+    function saveSettings() {
+        settings = {
+            companyName: document.getElementById('companyName').value,
+            companyAddress: document.getElementById('companyAddress').value,
+            companyPhone: document.getElementById('companyPhone').value,
+            companyFax: document.getElementById('companyFax').value,
+            bankInfo: document.getElementById('bankInfo').value,
+            quotePrefix: document.getElementById('quotePrefix').value,
+            defaultValidity: document.getElementById('defaultValidity').value,
+            taxRate: parseFloat(document.getElementById('taxRate').value) || 11,
+            sheetsWebAppUrl: document.getElementById('sheetsWebAppUrl').value,
+            sheetsId: document.getElementById('sheetsId').value,
+            noteIndentSea: document.getElementById('noteIndentSea').value,
+            noteIndentAir: document.getElementById('noteIndentAir').value,
+            noteReadyStock: document.getElementById('noteReadyStock').value
+        };
+
+        localStorage.setItem('maximus_settings', JSON.stringify(settings));
+        
+        // Update sync status visibility
+        if (settings.sheetsWebAppUrl) {
+            document.getElementById('sync-status').style.display = 'flex';
+        } else {
+            document.getElementById('sync-status').style.display = 'none';
+        }
+
+        showToast('✅ Pengaturan tersimpan');
+    }
+
+    function exportData() {
+        const data = {
+            settings: settings,
+            history: history,
+            exportedAt: new Date().toISOString()
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `quickquote-backup-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('✅ Data ter-export');
+    }
+
+    function importData() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if (data.settings) {
+                        settings = data.settings;
+                        localStorage.setItem('maximus_settings', JSON.stringify(settings));
+                    }
+                    if (data.history) {
+                        history = data.history;
+                        localStorage.setItem('maximus_history', JSON.stringify(history));
+                    }
+                    loadSettings();
+                    renderHistory();
+                    showToast('✅ Data ter-import');
+                } catch (err) {
+                    showToast('❌ File tidak valid');
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
+
+    function resetAllData() {
+        if (confirm('Yakin ingin menghapus SEMUA data? Tindakan ini tidak dapat dibatalkan.')) {
+            localStorage.removeItem('maximus_settings');
+            localStorage.removeItem('maximus_history');
+            location.reload();
+        }
+    }
+
+    // ============ UTILITIES ============
+    function formatRupiah(num) {
+        return 'Rp ' + formatNumber(num);
+    }
+
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function parseCurrency(str) {
+        if (typeof str === 'number') return str;
+        return parseInt(str.replace(/[^\d]/g, '')) || 0;
+    }
+
+    function formatPriceInput(el) {
+        let value = el.value.replace(/[^\d]/g, '');
+        if (value) {
+            el.value = formatNumber(parseInt(value));
+        }
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        return `${date.getDate().toString().padStart(2, '0')} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    </script>
+</body>
+</html>
