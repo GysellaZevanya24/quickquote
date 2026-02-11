@@ -23,10 +23,15 @@
             color: white;
             padding: 16px;
             text-align: center;
-            position: sticky;
+            position: fixed;
             top: 0;
+            left: 0;
+            right: 0;
             z-index: 100;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        body {
+            padding-top: 60px; /* offset for fixed header */
         }
         .app-header h1 { font-size: 1.3rem; font-weight: 700; }
         .app-header p { font-size: 0.75rem; opacity: 0.9; margin-top: 2px; }
@@ -35,8 +40,10 @@
             display: flex;
             background: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            position: sticky;
+            position: fixed;
             top: 60px;
+            left: 0;
+            right: 0;
             z-index: 99;
         }
         .tab-btn {
@@ -56,7 +63,7 @@
             font-weight: 600;
         }
 
-        .tab-content { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
+        .tab-content { display: none; padding: 16px; padding-top: 60px; max-width: 600px; margin: 0 auto; }
         .tab-content.active { display: block; }
 
         .card {
@@ -463,6 +470,39 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .loading-overlay.show { display: flex; }
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -629,14 +669,27 @@ Contoh:
             <!-- Note -->
             <div class="card">
                 <div class="card-title">📝 Note / Terms</div>
-                <div class="form-group">
-                    <select id="note-template" onchange="applyNoteTemplate()">
-                        <option value="">-- Pilih Template Note --</option>
-                        <option value="indent_sea">Indent By Sea</option>
-                        <option value="indent_air">Indent By Air</option>
-                        <option value="ready_stock">Ready Stock</option>
-                        <option value="custom">Custom</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Delivery</label>
+                        <select id="note-template" onchange="applyNoteTemplate()">
+                            <option value="">-- Pilih --</option>
+                            <option value="indent_sea">Indent By Sea</option>
+                            <option value="indent_air">Indent By Air</option>
+                            <option value="ready_stock">Ready Stock</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Pembayaran</label>
+                        <select id="payment-terms" onchange="updateNoteFromDropdowns()">
+                            <option value="CASH">CASH</option>
+                            <option value="TOP 15 Days">TOP 15</option>
+                            <option value="TOP 30 Days" selected>TOP 30</option>
+                            <option value="TOP 60 Days">TOP 60</option>
+                            <option value="TOP 90 Days">TOP 90</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">
                     <textarea id="quote-note" rows="5" placeholder="Catatan tambahan...">Indent By Sea
@@ -672,6 +725,12 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
             </div>
         </div>
 
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loading-text">Menyimpan...</div>
+        </div>
+
         <!-- TAB: HISTORY -->
         <div id="tab-history" class="tab-content">
             <div class="card">
@@ -704,9 +763,9 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
                     </div>
                     <div class="form-group">
                         <label>Alamat</label>
-                        <textarea id="companyAddress" rows="2">Jl. Pantai Indah Barat No. 1
-Jakarta Utara - Indonesia
-DKI Jakarta -</textarea>
+                        <textarea id="companyAddress" rows="2">Jl. Jendral Sudirman No.78
+Babakan, Tangerang - Banten 15118
+Banten</textarea>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -997,7 +1056,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         const saved = localStorage.getItem('maximus_settings');
         settings = saved ? JSON.parse(saved) : {
             companyName: 'PT. MAXIMUS INDO ASIA',
-            companyAddress: 'Jl. Pantai Indah Barat No. 1\nJakarta Utara - Indonesia\nDKI Jakarta -',
+            companyAddress: 'Jl. Jendral Sudirman No.78\nBabakan, Tangerang - Banten 15118\nBanten',
             companyPhone: '021-44832999',
             companyFax: '021-44835377',
             bankInfo: 'Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia',
@@ -1446,17 +1505,46 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
     function applyNoteTemplate() {
         const template = document.getElementById('note-template').value;
         const noteField = document.getElementById('quote-note');
+        const paymentTerms = document.getElementById('payment-terms').value;
 
+        let deliveryText = '';
         switch (template) {
             case 'indent_sea':
-                noteField.value = settings.noteIndentSea || document.getElementById('noteIndentSea').value;
+                deliveryText = 'Indent By Sea';
                 break;
             case 'indent_air':
-                noteField.value = settings.noteIndentAir || document.getElementById('noteIndentAir').value;
+                deliveryText = 'Indent By Air';
                 break;
             case 'ready_stock':
-                noteField.value = settings.noteReadyStock || document.getElementById('noteReadyStock').value;
+                deliveryText = 'Ready Stock';
                 break;
+            default:
+                deliveryText = '';
+        }
+
+        if (deliveryText) {
+            noteField.value = `${deliveryText}\n${paymentTerms}\nFranco Jakarta\n\nAll payment to ${settings.bankInfo}`;
+        }
+    }
+
+    function updateNoteFromDropdowns() {
+        const template = document.getElementById('note-template').value;
+        if (template) {
+            applyNoteTemplate();
+        } else {
+            // Update only payment line in current note
+            const noteField = document.getElementById('quote-note');
+            const paymentTerms = document.getElementById('payment-terms').value;
+            const lines = noteField.value.split('\n');
+            
+            // Replace line that starts with TOP or CASH
+            const newLines = lines.map(line => {
+                if (line.match(/^(TOP \d+ Days|CASH)/i)) {
+                    return paymentTerms;
+                }
+                return line;
+            });
+            noteField.value = newLines.join('\n');
         }
     }
 
@@ -1943,12 +2031,18 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
     async function saveToGoogleSheets() {
         const url = settings.sheetsWebAppUrl;
         if (!url) {
-            showToast('⚠️ Setup Google Sheets URL di Settings');
+            showToast('Setup Google Sheets URL di Settings');
             return;
         }
 
         const quoteData = getQuoteData();
         const totals = calculateTotal();
+
+        // Show loading overlay
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        loadingOverlay.classList.add('show');
+        loadingText.textContent = 'Menyimpan ke Google Sheets...';
 
         // Update sync status
         const syncStatus = document.getElementById('sync-status');
@@ -2019,7 +2113,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
                 
                 syncStatus.className = 'sync-status';
                 syncText.textContent = 'Tersimpan ke Google Sheets ✓';
-                showToast('✅ Data tersimpan ke Google Sheets');
+                showToast('Data tersimpan ke Google Sheets');
             } else {
                 throw new Error(result.error || 'Unknown error');
             }
@@ -2028,7 +2122,10 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
             console.error('Error saving to Sheets:', error);
             syncStatus.className = 'sync-status error';
             syncText.textContent = 'Gagal menyimpan ke Google Sheets';
-            showToast(`❌ Gagal menyimpan: ${error.message}`);
+            showToast(`Gagal menyimpan: ${error.message}`);
+        } finally {
+            // Hide loading overlay
+            document.getElementById('loading-overlay').classList.remove('show');
         }
     }
 
