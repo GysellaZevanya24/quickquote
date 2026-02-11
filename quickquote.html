@@ -120,6 +120,19 @@
             justify-content: center;
             gap: 6px;
         }
+        .icon {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .btn-toggle-active {
+            background: #374151;
+            color: white;
+        }
         .btn-full { width: 100%; }
         .btn-primary { background: #cc0000; color: white; }
         .btn-primary:active { background: #990000; transform: scale(0.98); }
@@ -208,6 +221,7 @@
             color: #6b7280;
         }
         .item-details span { background: #e5e7eb; padding: 2px 8px; border-radius: 4px; }
+        .item-details .item-markup { color: #1f2937; }
         .item-amount {
             font-weight: 700;
             color: #1f2937;
@@ -518,16 +532,19 @@
 
             <!-- Step 2: Items - Paste Area -->
             <div class="card">
-                <div class="card-title">📦 Daftar Item</div>
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18M5 7l1 12h12l1-12M9 7V5h6v2"/></svg>
+                    Daftar Item
+                </div>
                 
                 <div class="format-hint">
-                    💡 <strong>Format paste dari Google Sheets:</strong><br>
+                    <strong>Format paste dari Google Sheets:</strong><br>
                     <code>Part Number | Description | Qty | Unit | Unit Price | Discount(%) | Remark</code><br>
                     Contoh: <code>380905130 | LEFT SIDE BLADE | 1 | PCS | 2950000 | 10 | Indent 1-2 Month</code>
                 </div>
 
                 <div class="paste-area" id="paste-area" onclick="document.getElementById('paste-input').focus()">
-                    <h3>📋 Paste dari Google Sheets</h3>
+                    <h3>Paste dari Google Sheets</h3>
                     <p>Copy dari spreadsheet, lalu paste di bawah ini</p>
                     <textarea id="paste-input" placeholder="Paste data di sini...
 Contoh:
@@ -536,22 +553,54 @@ Contoh:
 805048195	HINGED COVER BOLT	40	PCS	17000	5	Indent 1-2 Month"></textarea>
                 </div>
                 <button class="btn btn-primary btn-full" onclick="parseAndAddItems()">
-                    ✨ Parse & Tambah Items
+                    Parse & Tambah Items
                 </button>
 
                 <div style="text-align: center; margin: 16px 0; color: #9ca3af;">atau</div>
 
                 <button class="btn btn-outline btn-full" onclick="openAddItemModal()">
-                    ➕ Tambah Manual
+                    Tambah Manual
                 </button>
             </div>
 
             <!-- Items List -->
             <div class="card" id="items-container" style="display: none;">
                 <div class="card-title">
-                    🛒 Items (<span id="items-count">0</span>)
-                    <button class="btn btn-danger" style="margin-left: auto; padding: 6px 12px; font-size: 0.75rem;" onclick="clearAllItems()">🗑️ Hapus Semua</button>
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h15l-1.5 9h-11zM6 6l-2-3H2"/></svg>
+                    Items (<span id="items-count">0</span>)
+                    <button class="btn btn-danger" style="margin-left: auto; padding: 6px 12px; font-size: 0.75rem;" onclick="clearAllItems()">
+                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+                        Hapus Semua
+                    </button>
                 </div>
+                
+                <!-- Bulk Price Adjustment -->
+                <div style="background: #f3f4f6; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                    <div style="font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5m6 14V9m6 10V12m4-7H2"/></svg>
+                        Adjust Harga Semua Item
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        <input type="number" id="bulk-adjustment" placeholder="%" style="width: 80px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;">
+                        <button id="bulk-markup-btn" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.8rem;" onclick="applyBulkAdjustment('markup')" aria-pressed="false">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l-5 5m5-5l5 5M12 5v14"/></svg>
+                            Markup
+                        </button>
+                        <button id="bulk-discount-btn" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.8rem;" onclick="applyBulkAdjustment('discount')" aria-pressed="false">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19l-5-5m5 5l5-5M12 5v14"/></svg>
+                            Discount
+                        </button>
+                        <button class="btn btn-outline" style="padding: 8px 12px; font-size: 0.8rem;" onclick="resetBulkAdjustment()">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 1 2.3 5.7M4 12v4h4"/></svg>
+                            Reset
+                        </button>
+                    </div>
+                    <div style="font-size: 0.7rem; color: #6b7280; margin-top: 6px;">
+                        Markup: menaikkan Unit Price | Discount: mengisi kolom Disc per item
+                    </div>
+                    <div id="bulk-status" style="font-size: 0.7rem; color: #374151; margin-top: 4px;">Status: -</div>
+                </div>
+                
                 <div id="items-list"></div>
             </div>
 
@@ -1181,7 +1230,7 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         const remark = document.getElementById('item-remark').value.trim();
 
         if (!partNumber && !description) {
-            showToast('⚠️ Part Number atau Description harus diisi');
+            showToast('Part Number atau Description harus diisi');
             return;
         }
 
@@ -1189,10 +1238,10 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
 
         if (editingIndex >= 0) {
             items[editingIndex] = item;
-            showToast('✅ Item berhasil diupdate');
+            showToast('Item berhasil diupdate');
         } else {
             items.push(item);
-            showToast('✅ Item berhasil ditambahkan');
+            showToast('Item berhasil ditambahkan');
         }
 
         closeItemModal();
@@ -1205,17 +1254,114 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
             items.splice(index, 1);
             renderItems();
             calculateTotal();
-            showToast('🗑️ Item dihapus');
+            showToast('Item dihapus');
         }
     }
 
     function clearAllItems() {
         if (confirm('Hapus semua item?')) {
             items = [];
+            setBulkActionState(null);
             renderItems();
             calculateTotal();
-            showToast('🗑️ Semua item dihapus');
+            showToast('Semua item dihapus');
         }
+    }
+
+    // ============ BULK PRICE ADJUSTMENT ============
+    function setBulkActionState(activeType, percentage) {
+        const markupButton = document.getElementById('bulk-markup-btn');
+        const discountButton = document.getElementById('bulk-discount-btn');
+        const status = document.getElementById('bulk-status');
+
+        const isMarkup = activeType === 'markup';
+        const isDiscount = activeType === 'discount';
+
+        if (markupButton) {
+            markupButton.classList.toggle('btn-toggle-active', isMarkup);
+            markupButton.setAttribute('aria-pressed', isMarkup ? 'true' : 'false');
+        }
+        if (discountButton) {
+            discountButton.classList.toggle('btn-toggle-active', isDiscount);
+            discountButton.setAttribute('aria-pressed', isDiscount ? 'true' : 'false');
+        }
+
+        if (!status) {
+            return;
+        }
+
+        if (!activeType) {
+            status.textContent = 'Status: -';
+            return;
+        }
+
+        if (activeType === 'markup') {
+            status.textContent = `Status: Markup aktif +${percentage}%`;
+        } else {
+            status.textContent = `Status: Discount aktif ${percentage}%`;
+        }
+    }
+
+    function applyBulkAdjustment(type) {
+        const percentage = parseFloat(document.getElementById('bulk-adjustment').value);
+        if (isNaN(percentage) || percentage <= 0) {
+            showToast('Masukkan persentase yang valid');
+            return;
+        }
+
+        if (items.length === 0) {
+            showToast('Tidak ada item');
+            return;
+        }
+
+        if (type === 'markup') {
+            // Markup: increase unit price
+            items.forEach(item => {
+                // Store original price if not stored yet
+                if (!item.originalUnitPrice) {
+                    item.originalUnitPrice = item.unitPrice;
+                }
+                item.markupPercent = percentage;
+                const increase = item.originalUnitPrice * (percentage / 100);
+                item.unitPrice = Math.round(item.originalUnitPrice + increase);
+            });
+            setBulkActionState('markup', percentage);
+            showToast(`Markup ${percentage}% diterapkan ke semua item`);
+        } else if (type === 'discount') {
+            // Discount: set discount percentage for all items
+            items.forEach(item => {
+                item.discount = percentage;
+            });
+            setBulkActionState('discount', percentage);
+            showToast(`Discount ${percentage}% diterapkan ke semua item`);
+        }
+
+        renderItems();
+        calculateTotal();
+    }
+
+    function resetBulkAdjustment() {
+        if (items.length === 0) {
+            showToast('Tidak ada item');
+            return;
+        }
+
+        items.forEach(item => {
+            // Reset unit price to original if markup was applied
+            if (item.originalUnitPrice) {
+                item.unitPrice = item.originalUnitPrice;
+                delete item.originalUnitPrice;
+            }
+            delete item.markupPercent;
+            // Reset discount
+            item.discount = 0;
+        });
+
+        document.getElementById('bulk-adjustment').value = '';
+        setBulkActionState(null);
+        renderItems();
+        calculateTotal();
+        showToast('Harga direset ke nilai awal');
     }
 
     // ============ RENDER ITEMS ============
@@ -1238,6 +1384,14 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
             const grossAmount = item.qty * item.unitPrice;
             const discountAmount = grossAmount * ((item.discount || 0) / 100);
             const netAmount = Math.round(grossAmount - discountAmount);
+            const markupPercent = item.originalUnitPrice
+                ? Math.round(((item.unitPrice - item.originalUnitPrice) / item.originalUnitPrice) * 100)
+                : 0;
+            const markupInfo = markupPercent > 0
+                ? `<span class="item-markup">Markup +${markupPercent}% (Base ${formatRupiah(item.originalUnitPrice)})</span>`
+                : '';
+            const discountInfo = item.discount > 0 ? `<span style="color:#dc2626;">Disc ${item.discount}%</span>` : '';
+            const remarkInfo = item.remark ? `<div class="item-remark">Note: ${item.remark}</div>` : '';
             return `
                 <div class="item-card">
                     <div class="item-header">
@@ -1250,12 +1404,19 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
                     <div class="item-details">
                         <span>${item.qty} ${item.unit}</span>
                         <span>@ ${formatRupiah(item.unitPrice)}</span>
-                        ${item.discount > 0 ? `<span style="color:#dc2626;">Disc ${item.discount}%</span>` : ''}
+                        ${markupInfo}
+                        ${discountInfo}
                     </div>
-                    ${item.remark ? `<div class="item-remark">📌 ${item.remark}</div>` : ''}
+                    ${remarkInfo}
                     <div class="item-actions">
-                        <button class="btn btn-secondary" onclick="editItem(${index})">✏️ Edit</button>
-                        <button class="btn btn-danger" onclick="deleteItem(${index})">🗑️</button>
+                        <button class="btn btn-secondary" onclick="editItem(${index})">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4zM14 6l4 4"/></svg>
+                            Edit
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteItem(${index})">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+                            Hapus
+                        </button>
                     </div>
                 </div>
             `;
