@@ -16,12 +16,13 @@
             background: #f3f4f6;
             min-height: 100vh;
             padding-bottom: 80px;
+            padding-top: 90px; /* offset for fixed header + tab-nav */
         }
 
         .app-header {
             background: linear-gradient(135deg, #374151 0%, #111827 100%);
             color: white;
-            padding: 16px;
+            padding: 10px 16px;
             text-align: center;
             position: fixed;
             top: 0;
@@ -30,25 +31,22 @@
             z-index: 100;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
-        body {
-            padding-top: 60px; /* offset for fixed header */
-        }
-        .app-header h1 { font-size: 1.3rem; font-weight: 700; }
-        .app-header p { font-size: 0.75rem; opacity: 0.9; margin-top: 2px; }
+        .app-header h1 { font-size: 1.1rem; font-weight: 700; }
+        .app-header p { font-size: 0.65rem; opacity: 0.9; margin-top: 1px; }
 
         .tab-nav {
             display: flex;
             background: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             position: fixed;
-            top: 60px;
+            top: 48px;
             left: 0;
             right: 0;
             z-index: 99;
         }
         .tab-btn {
             flex: 1;
-            padding: 12px 8px;
+            padding: 10px 8px;
             border: none;
             background: transparent;
             font-size: 0.75rem;
@@ -63,7 +61,7 @@
             font-weight: 600;
         }
 
-        .tab-content { display: none; padding: 16px; padding-top: 60px; max-width: 600px; margin: 0 auto; }
+        .tab-content { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
         .tab-content.active { display: block; }
 
         .card {
@@ -903,9 +901,15 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
                     <label>Unit Price (IDR) *</label>
                     <input type="text" id="item-price" placeholder="2,950,000" oninput="formatPriceInput(this)">
                 </div>
-                <div class="form-group">
-                    <label>Discount (%)</label>
-                    <input type="number" id="item-discount" placeholder="0" min="0" max="100" value="0">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Markup (%)</label>
+                        <input type="number" id="item-markup" placeholder="0" min="0" value="0" onchange="applyItemMarkup()">
+                    </div>
+                    <div class="form-group">
+                        <label>Discount (%)</label>
+                        <input type="number" id="item-discount" placeholder="0" min="0" max="100" value="0">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Remark</label>
@@ -1101,7 +1105,14 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
     }
 
     function generateQuoteNumber(salesName, commitSequence = false) {
-        const date = new Date();
+        // Use date from input field, fallback to current date
+        const dateInput = document.getElementById('quoteDate');
+        let date;
+        if (dateInput && dateInput.value) {
+            date = new Date(dateInput.value);
+        } else {
+            date = new Date();
+        }
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
@@ -1135,10 +1146,8 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
     }
 
     function updateQuoteNumber() {
-        const salesName = document.getElementById('sales-name').value;
-        if (salesName) {
-            document.getElementById('quoteNumber').value = getNextQuoteNumber(salesName);
-        }
+        const salesName = document.getElementById('sales-name').value || 'SALES';
+        document.getElementById('quoteNumber').value = getNextQuoteNumber(salesName);
     }
 
     function initQuotation() {
@@ -1160,6 +1169,9 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
 
         // Add listener for sales name change
         document.getElementById('sales-name').addEventListener('change', updateQuoteNumber);
+        
+        // Add listener for date change to update quote number
+        document.getElementById('quoteDate').addEventListener('change', updateQuoteNumber);
     }
 
     function setupPasteListener() {
@@ -1256,6 +1268,10 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         document.getElementById('item-qty').value = '1';
         document.getElementById('item-unit').value = 'PCS';
         document.getElementById('item-price').value = '';
+        // Clear data attributes
+        delete document.getElementById('item-price').dataset.baselinePrice;
+        delete document.getElementById('item-price').dataset.markupPercent;
+        document.getElementById('item-markup').value = '0';
         document.getElementById('item-discount').value = '0';
         document.getElementById('item-remark').value = '';
         document.getElementById('item-modal').classList.add('show');
@@ -1270,13 +1286,32 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         document.getElementById('item-qty').value = item.qty;
         document.getElementById('item-unit').value = item.unit;
         document.getElementById('item-price').value = formatNumber(item.unitPrice);
+        // Clear data attributes
+        delete document.getElementById('item-price').dataset.baselinePrice;
+        delete document.getElementById('item-price').dataset.markupPercent;
         document.getElementById('item-discount').value = item.discount || 0;
+        document.getElementById('item-markup').value = 0;
         document.getElementById('item-remark').value = item.remark || '';
         document.getElementById('item-modal').classList.add('show');
     }
 
     function closeItemModal() {
         document.getElementById('item-modal').classList.remove('show');
+    }
+
+    function applyItemMarkup() {
+        const markupPercent = parseFloat(document.getElementById('item-markup').value) || 0;
+        const currentPrice = parseCurrency(document.getElementById('item-price').value);
+        if (markupPercent > 0 && currentPrice > 0) {
+            // Store the current price as baseline before markup
+            const baselinePrice = currentPrice;
+            const newPrice = Math.round(baselinePrice * (1 + markupPercent / 100));
+            document.getElementById('item-price').value = formatNumber(newPrice);
+            // Store baseline price in a hidden data attribute for saveItem to use
+            document.getElementById('item-price').dataset.baselinePrice = baselinePrice;
+            document.getElementById('item-price').dataset.markupPercent = markupPercent;
+            showToast(`Markup ${markupPercent}% diterapkan (Base: ${formatRupiah(baselinePrice)})`);
+        }
     }
 
     function saveItem() {
@@ -1287,6 +1322,15 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         const unitPrice = parseCurrency(document.getElementById('item-price').value);
         const discount = parseFloat(document.getElementById('item-discount').value) || 0;
         const remark = document.getElementById('item-remark').value.trim();
+        
+        // Get markup info from data attributes if applied
+        const priceInput = document.getElementById('item-price');
+        const baselinePrice = priceInput.dataset.baselinePrice ? parseFloat(priceInput.dataset.baselinePrice) : null;
+        const markupPercent = priceInput.dataset.markupPercent ? parseFloat(priceInput.dataset.markupPercent) : null;
+        
+        // Clear data attributes
+        delete priceInput.dataset.baselinePrice;
+        delete priceInput.dataset.markupPercent;
 
         if (!partNumber && !description) {
             showToast('Part Number atau Description harus diisi');
@@ -1294,6 +1338,16 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         }
 
         const item = { partNumber, description, qty, unit, unitPrice, discount, remark };
+        
+        // Preserve or set originalUnitPrice for markup tracking
+        if (baselinePrice && markupPercent) {
+            item.originalUnitPrice = baselinePrice;
+            item.markupPercent = markupPercent;
+        } else if (editingIndex >= 0 && items[editingIndex].originalUnitPrice) {
+            // Preserve existing markup info if not changed
+            item.originalUnitPrice = items[editingIndex].originalUnitPrice;
+            item.markupPercent = items[editingIndex].markupPercent;
+        }
 
         if (editingIndex >= 0) {
             items[editingIndex] = item;
@@ -1594,22 +1648,28 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
                             <th>Description</th>
                             <th>Qty</th>
                             <th>Unit Price</th>
+                            <th>Disc</th>
                             <th>Amount</th>
                             <th>Remark</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${items.map((item, i) => `
+                        ${items.map((item, i) => {
+                            const grossAmount = item.qty * item.unitPrice;
+                            const discountAmount = grossAmount * ((item.discount || 0) / 100);
+                            const netAmount = Math.round(grossAmount - discountAmount);
+                            return `
                             <tr>
                                 <td>${i + 1}</td>
                                 <td>${item.partNumber}</td>
                                 <td>${item.description}</td>
                                 <td>${item.qty} ${item.unit}</td>
                                 <td class="amount-col">${formatRupiah(item.unitPrice)}</td>
-                                <td class="amount-col">${formatRupiah(item.qty * item.unitPrice)}</td>
+                                <td>${item.discount > 0 ? item.discount + '%' : '-'}</td>
+                                <td class="amount-col">${formatRupiah(netAmount)}</td>
                                 <td style="color: #6b7280; font-size: 0.65rem;">${item.remark}</td>
                             </tr>
-                        `).join('')}
+                        `}).join('')}
                     </tbody>
                 </table>
 
@@ -1866,8 +1926,9 @@ All payment to Bank BCA NO 549.565.6788 a/n PT. Maximus Indo Asia</textarea>
         commitQuoteNumber(quoteData.salesName);
 
         // Save
-        doc.save(`${quoteData.quoteNumber}.pdf`);
-        showToast('✅ PDF berhasil di-download');
+        const customerName = quoteData.customerName.trim();
+        doc.save(`${quoteData.quoteNumber}_${customerName}.pdf`);
+        showToast('PDF berhasil di-download');
 
         // Save to history
         saveToHistory(quoteData, totals);
