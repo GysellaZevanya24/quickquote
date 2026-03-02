@@ -1762,36 +1762,55 @@ Franco Jakarta</textarea>
         doc.setFont('helvetica', 'bold');
         doc.text('Quotation', 105, 40.5, { align: 'center' });
 
-        // Customer info (left side)
+        // Customer info (left side) - with text wrapping
         doc.setTextColor(...black);
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
-        y = 50;
-        doc.text(`Customer`, 14, y);
-        doc.text(`: ${quoteData.customerName}`, 35, y);
-        y += 4;
-        doc.text(`Address`, 14, y);
-        doc.text(`: ${quoteData.customerAddress}`, 35, y);
-        y += 4;
-        doc.text(`Telp`, 14, y);
-        doc.text(`: ${quoteData.customerPhone}`, 35, y);
-        y += 4;
-        doc.text(`Fax`, 14, y);
-        doc.text(`: `, 35, y);
+        
+        const maxLeftWidth = 80; // Max width before quote info section (120 - 35 - 5 margin)
+        const lineHeight = 3.5;
+        let leftY = 50;
+        
+        // Customer name with wrapping
+        doc.text(`Customer`, 14, leftY);
+        const customerNameLines = doc.splitTextToSize(`: ${quoteData.customerName}`, maxLeftWidth);
+        doc.text(customerNameLines, 35, leftY);
+        leftY += customerNameLines.length * lineHeight + 0.5;
+        
+        // Address with wrapping
+        doc.text(`Address`, 14, leftY);
+        const addressTextLines = doc.splitTextToSize(`: ${quoteData.customerAddress}`, maxLeftWidth);
+        doc.text(addressTextLines, 35, leftY);
+        leftY += addressTextLines.length * lineHeight + 0.5;
+        
+        // Phone
+        doc.text(`Telp`, 14, leftY);
+        doc.text(`: ${quoteData.customerPhone}`, 35, leftY);
+        leftY += 4;
+        
+        // Fax
+        doc.text(`Fax`, 14, leftY);
+        doc.text(`: `, 35, leftY);
+        leftY += 4;
 
-        // Quote info (right side)
-        y = 50;      
-        doc.text(`Date`, 120, y);
-        doc.text(`: ${formatDate(quoteData.quoteDate)}`, 135, y);
-        y += 4;
-        doc.text(`Validity`, 120, y);
-        doc.text(`: ${quoteData.validity}`, 135, y);
-        y += 4;
-        doc.text(`Email`, 120, y);
-        doc.text(`: ${quoteData.customerEmail}`, 135, y);
-        y += 4;
-        doc.text(`Attn`, 120, y);
-        doc.text(`: ${quoteData.attn}`, 135, y);
+        // Quote info (right side) - fixed position
+        let rightY = 50;      
+        doc.text(`Date`, 120, rightY);
+        doc.text(`: ${formatDate(quoteData.quoteDate)}`, 135, rightY);
+        rightY += 4;
+        doc.text(`Validity`, 120, rightY);
+        doc.text(`: ${quoteData.validity}`, 135, rightY);
+        rightY += 4;
+        doc.text(`Email`, 120, rightY);
+        const emailLines = doc.splitTextToSize(`: ${quoteData.customerEmail}`, 60);
+        doc.text(emailLines, 135, rightY);
+        rightY += emailLines.length * lineHeight + 0.5;
+        doc.text(`Attn`, 120, rightY);
+        doc.text(`: ${quoteData.attn}`, 135, rightY);
+        rightY += 4;
+        
+        // Calculate table start position based on content height
+        const tableStartY = Math.max(leftY, rightY) + 6;
 
         // Table with discount column
         const tableData = items.map((item, i) => {
@@ -1813,7 +1832,7 @@ Franco Jakarta</textarea>
         });
 
         doc.autoTable({
-            startY: 70,
+            startY: tableStartY,
             head: [['No', 'Part No', 'Description', 'Qty', 'Unit', 'Unit Price', 'Disc', 'Amount', 'Remark']],
             body: tableData,
             theme: 'grid',
@@ -1839,13 +1858,13 @@ Franco Jakarta</textarea>
             columnStyles: {
                 0: { cellWidth: 8, halign: 'center', textColor: [0, 0, 0] },
                 1: { cellWidth: 25, textColor: [0, 0, 0] },
-                2: { cellWidth: 45, textColor: [0, 0, 0] },
+                2: { cellWidth: 40, textColor: [0, 0, 0] },
                 3: { cellWidth: 10, halign: 'center', textColor: [0, 0, 0] },
                 4: { cellWidth: 10, halign: 'center', textColor: [0, 0, 0] },
                 5: { cellWidth: 22, halign: 'right', textColor: [0, 0, 0] },
                 6: { cellWidth: 10, halign: 'center', textColor: [0, 0, 0] },
                 7: { cellWidth: 25, halign: 'right', textColor: [0, 0, 0] },
-                8: { cellWidth: 20, textColor: [0, 0, 0], fontSize: 7 }
+                8: { cellWidth: 32, textColor: [0, 0, 0], fontSize: 7 }
             },
             margin: { left: 14, right: 14 }
         });
@@ -1853,45 +1872,44 @@ Franco Jakarta</textarea>
         // Get page dimensions
         const pageHeight = doc.internal.pageSize.height;
         const pageWidth = doc.internal.pageSize.width;
-        let finalY = doc.lastAutoTable.finalY + 10;
+        let finalY = doc.lastAutoTable.finalY + 8;
 
-        // Check if we need a new page for totals section (need ~80mm for totals + notes + signature)
-        if (finalY > pageHeight - 80) {
+        // Check if we need a new page for totals section (need ~70mm for totals + notes + signature)
+        if (finalY > pageHeight - 70) {
             doc.addPage();
             finalY = 20;
         }
 
         // Totals section - aligned with Amount column
-        // Table columns: No(8)+PartNo(25)+Desc(45)+Qty(10)+Unit(10)+UnitPrice(22)+Disc(10) = 130 from left margin
-        // Amount column: starts at 14+130=144, width 25, ends at 169
-        const amountColEnd = 14 + 8 + 25 + 45 + 10 + 10 + 22 + 10 + 25; // = 169
-        const labelStartX = amountColEnd - 50; // Labels start 50mm before end
+        // Amount column: 14 + 8 + 25 + 40 + 10 + 10 + 22 + 10 = 139 (start), width 25, ends at 164
+        const amountColEnd = 14 + 8 + 25 + 40 + 10 + 10 + 22 + 10 + 25; // = 164
+        const labelX = amountColEnd - 60; // Labels position
 
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(...black);
         
         // Total row
-        doc.text('Total', labelStartX, finalY);
+        doc.text('Total', labelX, finalY);
         doc.text('Rp ' + formatNumber(totals.subtotal), amountColEnd, finalY, { align: 'right' });
         
         // Tax row
         finalY += 5;
-        doc.text('Tax (11%)', labelStartX, finalY);
+        doc.text('Tax (11%)', labelX, finalY);
         doc.text('Rp ' + formatNumber(totals.tax), amountColEnd, finalY, { align: 'right' });
         
         // Grand Total row
         finalY += 5;
         doc.setFont('helvetica', 'bold');
-        doc.text('Grand Total', labelStartX, finalY);
+        doc.text('Grand Total', labelX, finalY);
         doc.text('Rp ' + formatNumber(totals.grandTotal), amountColEnd, finalY, { align: 'right' });
 
+        finalY += 10;
+
         // Check if we need a new page for notes section
-        if (finalY > pageHeight - 60) {
+        if (finalY > pageHeight - 50) {
             doc.addPage();
             finalY = 20;
-        } else {
-            finalY += 15;
         }
 
         // Note section
